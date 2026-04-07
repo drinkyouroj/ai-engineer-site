@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://drinkyouroj.github.io/sitemap.xml
+Sitemap: https://www.justin.hearn.me/sitemap.xml
