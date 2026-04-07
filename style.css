@@ -509,18 +509,19 @@ p { line-height: var(--line-height-relaxed); }
   will-change: transform;
 }
 
-/* ASCII portrait — positioned right side of hero, decorative atmosphere */
+/* ASCII portrait — centered behind hero headline as background texture */
 .hero-ascii {
   position: absolute;
   top: 50%;
-  right: clamp(var(--space-4), 4vw, var(--space-10));
-  transform: translateY(-50%);
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 0;
   font-family: var(--font-family-mono);
-  font-size: clamp(4px, 0.42vw, 6px);
+  font-size: clamp(6.6px, 0.72vw, 11px);
   line-height: 1;
   white-space: pre;
   color: var(--color-accent-primary);
-  opacity: 0.18;
+  opacity: 0.12;
   pointer-events: none;
   user-select: none;
   margin: 0;

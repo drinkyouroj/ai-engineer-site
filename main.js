@@ -82,7 +82,7 @@ function configureScrollAnimations() {
     .fromTo('.hero-label',   { opacity: 0, y: 12 }, { opacity: 1,    y: 0, duration: 0.6 }, 0.1)
     .fromTo('.hero-tagline', { opacity: 0, y: 14 }, { opacity: 1,    y: 0, duration: 0.6 }, 0.8)
     .fromTo('.hero-scroll',  { opacity: 0, y: 8  }, { opacity: 1,    y: 0, duration: 0.5 }, 1.1)
-    .fromTo('.hero-ascii',   { opacity: 0, x: 20 }, { opacity: 0.18, x: 0, duration: 1.2, ease: 'power1.out' }, 1.0);
+    .fromTo('.hero-ascii',   { opacity: 0, scale: 1.04 }, { opacity: 0.12, scale: 1, duration: 1.4, ease: 'power1.out' }, 1.0);
 
   // Scramble fires at the same time as label, runs its own animation
   setTimeout(() => {
