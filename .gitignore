@@ -1,2 +1,9 @@
 .claude/
 .DS_Store
+
+# Source SVGs (PNGs are committed; SVG originals kept local only)
+justin_hearn.svg
+pkm-llm-wiki-og-image.svg
+
+# SEO research docs (local reference only)
+seo/
