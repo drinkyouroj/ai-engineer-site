@@ -15,6 +15,13 @@
   <link rel="canonical" href="https://drinkyouroj.github.io">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230a0a0a'/><text x='9' y='22' font-family='monospace' font-size='15' font-weight='700' fill='%233b82f6'>J_</text></svg>">
 
+  <!-- Font preconnect hints — must precede the stylesheet request -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap">
+  <!-- GSAP CDN preconnect -->
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+
   <link rel="stylesheet" href="tokens.css">
   <link rel="stylesheet" href="style.css">
 </head>
@@ -297,9 +304,38 @@
     <section id="writing" class="section section-alt" aria-labelledby="writing-heading">
       <div class="container">
         <p class="section-label" id="writing-heading">Writing</p>
-        <div class="writing-grid">
-          <!-- Populated dynamically by fetchWritingPosts() in main.js -->
-          <p class="writing-loading" aria-live="polite">Loading posts…</p>
+        <div class="writing-grid" aria-live="polite" aria-label="Writing posts">
+          <!-- Skeleton cards — replaced by fetchWritingPosts() in main.js -->
+          <div class="skeleton-writing" aria-hidden="true">
+            <div class="skeleton-line skeleton-date"></div>
+            <div class="skeleton-line skeleton-title"></div>
+            <div class="skeleton-body">
+              <div class="skeleton-line"></div>
+              <div class="skeleton-line"></div>
+              <div class="skeleton-line"></div>
+            </div>
+            <div class="skeleton-line skeleton-cta"></div>
+          </div>
+          <div class="skeleton-writing" aria-hidden="true">
+            <div class="skeleton-line skeleton-date"></div>
+            <div class="skeleton-line skeleton-title"></div>
+            <div class="skeleton-body">
+              <div class="skeleton-line"></div>
+              <div class="skeleton-line"></div>
+              <div class="skeleton-line"></div>
+            </div>
+            <div class="skeleton-line skeleton-cta"></div>
+          </div>
+          <div class="skeleton-writing" aria-hidden="true">
+            <div class="skeleton-line skeleton-date"></div>
+            <div class="skeleton-line skeleton-title"></div>
+            <div class="skeleton-body">
+              <div class="skeleton-line"></div>
+              <div class="skeleton-line"></div>
+              <div class="skeleton-line"></div>
+            </div>
+            <div class="skeleton-line skeleton-cta"></div>
+          </div>
         </div>
         <div class="writing-footer reveal">
           <a href="https://drinkyouroj.substack.com" target="_blank" rel="noopener noreferrer" class="writing-all-link">
@@ -313,9 +349,59 @@
     <section id="testimonials" class="section" aria-labelledby="testimonials-heading">
       <div class="container">
         <p class="section-label" id="testimonials-heading">Testimonials</p>
-        <div class="testimonials-grid">
-          <!-- Populated dynamically by fetchTestimonials() in main.js -->
-          <p class="testimonials-loading" aria-live="polite">Loading testimonials…</p>
+        <div class="testimonials-grid" aria-live="polite" aria-label="Testimonials">
+          <!-- Skeleton cards — replaced by fetchTestimonials() in main.js -->
+          <div class="skeleton-testimonial" aria-hidden="true">
+            <div class="skeleton-line skeleton-quote"></div>
+            <div class="skeleton-body">
+              <div class="skeleton-line"></div>
+              <div class="skeleton-line"></div>
+              <div class="skeleton-line"></div>
+              <div class="skeleton-line"></div>
+            </div>
+            <div class="skeleton-divider"></div>
+            <div class="skeleton-person">
+              <div class="skeleton-line skeleton-avatar"></div>
+              <div class="skeleton-meta">
+                <div class="skeleton-line skeleton-name"></div>
+                <div class="skeleton-line skeleton-role"></div>
+              </div>
+            </div>
+          </div>
+          <div class="skeleton-testimonial" aria-hidden="true">
+            <div class="skeleton-line skeleton-quote"></div>
+            <div class="skeleton-body">
+              <div class="skeleton-line"></div>
+              <div class="skeleton-line"></div>
+              <div class="skeleton-line"></div>
+              <div class="skeleton-line"></div>
+            </div>
+            <div class="skeleton-divider"></div>
+            <div class="skeleton-person">
+              <div class="skeleton-line skeleton-avatar"></div>
+              <div class="skeleton-meta">
+                <div class="skeleton-line skeleton-name"></div>
+                <div class="skeleton-line skeleton-role"></div>
+              </div>
+            </div>
+          </div>
+          <div class="skeleton-testimonial" aria-hidden="true">
+            <div class="skeleton-line skeleton-quote"></div>
+            <div class="skeleton-body">
+              <div class="skeleton-line"></div>
+              <div class="skeleton-line"></div>
+              <div class="skeleton-line"></div>
+              <div class="skeleton-line"></div>
+            </div>
+            <div class="skeleton-divider"></div>
+            <div class="skeleton-person">
+              <div class="skeleton-line skeleton-avatar"></div>
+              <div class="skeleton-meta">
+                <div class="skeleton-line skeleton-name"></div>
+                <div class="skeleton-line skeleton-role"></div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>

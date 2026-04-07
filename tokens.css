@@ -7,9 +7,6 @@
  * No component should hardcode a color, size, or timing value.
  */
 
-/* ─── Google Fonts ──────────────────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap');
-
 /* ─── Dark Mode (default — this site is intentionally dark) ─── */
 :root {
   /* Color: Backgrounds */

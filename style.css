@@ -1197,6 +1197,69 @@ p { line-height: var(--line-height-relaxed); }
 }
 
 /* ─────────────────────────────────────────────────────────────────
+   SKELETON LOADING STATES
+   ───────────────────────────────────────────────────────────────── */
+@keyframes skeleton-shimmer {
+  0%   { background-position: -800px 0; }
+  100% { background-position:  800px 0; }
+}
+
+.skeleton-line {
+  border-radius: var(--border-radius-sm);
+  background: linear-gradient(
+    90deg,
+    var(--color-bg-tertiary) 25%,
+    #252525 50%,
+    var(--color-bg-tertiary) 75%
+  );
+  background-size: 800px 100%;
+  animation: skeleton-shimmer 1.6s infinite linear;
+}
+
+/* Writing skeleton — mirrors .writing-card layout */
+.skeleton-writing {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-6);
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--border-radius-lg);
+}
+
+.skeleton-writing .skeleton-date  { height: 12px; width: 90px; }
+.skeleton-writing .skeleton-title { height: 16px; width: 85%; margin-top: var(--space-1); }
+.skeleton-writing .skeleton-body  { display: flex; flex-direction: column; gap: var(--space-2); margin-top: var(--space-1); }
+.skeleton-writing .skeleton-body .skeleton-line { height: 13px; }
+.skeleton-writing .skeleton-body .skeleton-line:nth-child(2) { width: 90%; }
+.skeleton-writing .skeleton-body .skeleton-line:last-child    { width: 60%; }
+.skeleton-writing .skeleton-cta   { height: 12px; width: 120px; margin-top: auto; padding-top: var(--space-2); }
+
+/* Testimonial skeleton — mirrors .testimonial-card layout */
+.skeleton-testimonial {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding: var(--space-6);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius-lg);
+}
+
+.skeleton-testimonial .skeleton-quote { height: 32px; width: 24px; }
+.skeleton-testimonial .skeleton-body  { display: flex; flex-direction: column; gap: var(--space-2); }
+.skeleton-testimonial .skeleton-body .skeleton-line { height: 13px; }
+.skeleton-testimonial .skeleton-body .skeleton-line:nth-child(2) { width: 95%; }
+.skeleton-testimonial .skeleton-body .skeleton-line:nth-child(3) { width: 80%; }
+.skeleton-testimonial .skeleton-body .skeleton-line:last-child    { width: 55%; }
+.skeleton-testimonial .skeleton-divider { height: 1px; width: 32px; background: var(--color-border-secondary); }
+.skeleton-testimonial .skeleton-person  { display: flex; align-items: center; gap: var(--space-3); }
+.skeleton-testimonial .skeleton-avatar  { width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0; }
+.skeleton-testimonial .skeleton-meta    { display: flex; flex-direction: column; gap: var(--space-2); flex: 1; }
+.skeleton-testimonial .skeleton-name    { height: 13px; width: 120px; }
+.skeleton-testimonial .skeleton-role    { height: 11px; width: 90px; }
+
+/* ─────────────────────────────────────────────────────────────────
    FOCUS VISIBILITY (global)
    ───────────────────────────────────────────────────────────────── */
 :focus { outline: none; }
@@ -1232,4 +1295,6 @@ p { line-height: var(--line-height-relaxed); }
   .contact-link:hover {
     transform: none;
   }
+
+  .skeleton-line { animation: none; }
 }
