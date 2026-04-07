@@ -573,7 +573,7 @@ async function fetchWritingPosts() {
     const PKM_SLUG = 'obsidian-was-never-the-problem';
     const items = data.items
       .filter(item => !item.link.includes(PKM_SLUG))
-      .slice(0, 3);
+      .slice(0, 2);
 
     // Build card nodes — no innerHTML with untrusted data
     const fragment = document.createDocumentFragment();
