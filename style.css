@@ -509,6 +509,30 @@ p { line-height: var(--line-height-relaxed); }
   will-change: transform;
 }
 
+/* ASCII portrait — positioned right side of hero, decorative atmosphere */
+.hero-ascii {
+  position: absolute;
+  top: 50%;
+  right: clamp(var(--space-4), 4vw, var(--space-10));
+  transform: translateY(-50%);
+  font-family: var(--font-family-mono);
+  font-size: clamp(4px, 0.42vw, 6px);
+  line-height: 1;
+  white-space: pre;
+  color: var(--color-accent-primary);
+  opacity: 0.18;
+  pointer-events: none;
+  user-select: none;
+  margin: 0;
+  /* Fade in with the rest of the hero — GSAP will animate this */
+  will-change: opacity, transform;
+}
+
+/* Hide on screens where it would overlap the headline */
+@media (max-width: 900px) {
+  .hero-ascii { display: none; }
+}
+
 /* heroFadeIn removed — GSAP controls all hero element motion */
 
 .hero-label {
