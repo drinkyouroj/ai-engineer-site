@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Justin Hearn — AI-Augmented Engineering</title>
+  <meta name="description" content="Justin Hearn — 15+ years of systems engineering, now amplified by AI. Building real tools with Claude, D3, FastAPI, and TypeScript.">
+  <meta property="og:title" content="Justin Hearn — AI-Augmented Engineering">
+  <meta property="og:description" content="15+ years of systems thinking, now amplified by AI.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://drinkyouroj.github.io">
+  <meta property="og:image" content="https://drinkyouroj.github.io/og-image.svg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://drinkyouroj.github.io/og-image.svg">
+  <link rel="canonical" href="https://drinkyouroj.github.io">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230a0a0a'/><text x='9' y='22' font-family='monospace' font-size='15' font-weight='700' fill='%233b82f6'>J_</text></svg>">
+
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ─── Custom Cursor (desktop only — hidden on touch) ─────── -->
+  <div class="cursor" aria-hidden="true">
+    <div class="cursor-dot"></div>
+    <div class="cursor-ring"></div>
+  </div>
+
+  <!-- ─── Scroll Progress Bar ─────────────────────────────────── -->
+  <div class="scroll-progress" aria-hidden="true"></div>
+
+  <!-- ─── Navigation ──────────────────────────────────────────── -->
+  <header class="nav-header" role="banner">
+    <nav class="nav" aria-label="Main navigation">
+      <a href="#hero" class="nav-logo" aria-label="Justin Hearn — home">
+        <span class="nav-logo-name">Justin Hearn</span>
+      </a>
+
+      <ul class="nav-links" role="list">
+        <li><a href="#about" class="nav-link" data-section="about">About</a></li>
+        <li><a href="#how-i-work" class="nav-link" data-section="how-i-work">How I Work</a></li>
+        <li><a href="#projects" class="nav-link" data-section="projects">Projects</a></li>
+        <li><a href="#writing" class="nav-link" data-section="writing">Writing</a></li>
+        <li><a href="#testimonials" class="nav-link" data-section="testimonials">Testimonials</a></li>
+        <li><a href="#contact" class="nav-link" data-section="contact">Contact</a></li>
+      </ul>
+
+      <button
+        class="nav-hamburger"
+        aria-label="Open navigation menu"
+        aria-expanded="false"
+        aria-controls="mobile-nav"
+      >
+        <span class="hamburger-bar"></span>
+        <span class="hamburger-bar"></span>
+        <span class="hamburger-bar"></span>
+      </button>
+    </nav>
+  </header>
+
+  <!-- ─── Mobile Nav Overlay ──────────────────────────────────── -->
+  <div class="mobile-nav" id="mobile-nav" aria-hidden="true" role="dialog" aria-label="Navigation menu">
+    <button class="mobile-nav-close" aria-label="Close navigation menu">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+    <ul class="mobile-nav-links" role="list">
+      <li><a href="#about" class="mobile-nav-link">About</a></li>
+      <li><a href="#how-i-work" class="mobile-nav-link">How I Work</a></li>
+      <li><a href="#projects" class="mobile-nav-link">Projects</a></li>
+      <li><a href="#writing" class="mobile-nav-link">Writing</a></li>
+      <li><a href="#testimonials" class="mobile-nav-link">Testimonials</a></li>
+      <li><a href="#contact" class="mobile-nav-link">Contact</a></li>
+    </ul>
+  </div>
+  <div class="mobile-nav-backdrop" aria-hidden="true"></div>
+
+  <main>
+
+    <!-- ─── Hero ──────────────────────────────────────────────── -->
+    <section id="hero" class="hero" aria-labelledby="hero-heading">
+      <div class="hero-glow" aria-hidden="true"></div>
+
+      <!-- Floating terminal snippets — purely decorative atmosphere -->
+      <div class="hero-floats" aria-hidden="true">
+        <span class="hero-float" style="--f-x: 12%; --f-y: 22%; --f-delay: 0s;">$ claude build</span>
+        <span class="hero-float" style="--f-x: 78%; --f-y: 18%; --f-delay: 0.4s;">&gt; analyzing context...</span>
+        <span class="hero-float" style="--f-x: 8%;  --f-y: 68%; --f-delay: 0.8s;">$ git commit -m "shipped"</span>
+        <span class="hero-float" style="--f-x: 72%; --f-y: 72%; --f-delay: 1.2s;">&gt; 847 tokens processed</span>
+        <span class="hero-float" style="--f-x: 20%; --f-y: 82%; --f-delay: 0.2s;">const agent = new Claude()</span>
+        <span class="hero-float" style="--f-x: 65%; --f-y: 42%; --f-delay: 1.0s;">✓ build complete</span>
+      </div>
+
+      <div class="hero-inner">
+        <p class="hero-label">Justin Hearn</p>
+        <h1 id="hero-heading" class="hero-headline">
+          AI&#8209;Augmented<br>Engineering
+        </h1>
+        <p class="hero-tagline">
+          15+ years of systems thinking,<br class="hero-tagline-break"> now amplified by AI.
+        </p>
+        <a href="#about" class="hero-scroll" aria-label="Scroll to About section">
+          <span class="hero-scroll-label">Scroll</span>
+          <svg class="hero-scroll-icon" width="16" height="20" viewBox="0 0 16 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+            <path d="M8 3v14M2 13l6 6 6-6"/>
+          </svg>
+        </a>
+      </div>
+    </section>
+
+    <!-- ─── About ─────────────────────────────────────────────── -->
+    <section id="about" class="section" aria-labelledby="about-heading">
+      <div class="container">
+        <p class="section-label">About</p>
+        <div class="about-grid">
+          <div class="about-col reveal">
+            <h2 id="about-heading" class="about-col-title">Systems Foundation</h2>
+            <p class="about-copy">
+              Before AI was part of the vocabulary, I was deep inside production systems —
+              Linux environments, Chef and Ansible automation, Grafana dashboards, and incident
+              response at companies like Facebook Reality Labs and Rackspace.
+              <span class="counter" data-target="15" aria-label="15">0</span>+ years of
+              keeping infrastructure alive builds a specific kind of thinking: you learn to
+              read the system before you change the system.
+            </p>
+            <p class="about-copy">
+              That background — understanding how things break, how they recover, and how to
+              communicate across technical boundaries — is the foundation everything else is
+              built on.
+            </p>
+          </div>
+
+          <div class="about-divider" aria-hidden="true"></div>
+
+          <div class="about-col reveal">
+            <h2 class="about-col-title">The AI Pivot</h2>
+            <p class="about-copy">
+              AI changed what's possible for a solo builder. With Claude as a genuine
+              collaborator — not autocomplete — I can now ship things that used to require
+              a full team: a manuscript editor with chapter-level continuity tracking,
+              a force-directed graph visualization with sentiment analysis, a form system
+              with embedded AI processing.
+            </p>
+            <p class="about-copy">
+              The work isn't about using AI instead of thinking. It's about using deep
+              systems knowledge to ask the right questions, then using AI to build the
+              answers faster than was previously possible.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── How I Work ────────────────────────────────────────── -->
+    <section id="how-i-work" class="section section-alt" aria-labelledby="how-i-work-heading">
+      <div class="container">
+        <p class="section-label" id="how-i-work-heading">How I Work</p>
+        <div class="workflow-steps">
+
+          <div class="workflow-step reveal">
+            <span class="workflow-num" aria-hidden="true">01</span>
+            <h3 class="workflow-title">Understand the System</h3>
+            <p class="workflow-copy">
+              Every problem lives inside a larger system. Before writing a line of code,
+              I map the structure — data flows, failure modes, user needs, edge cases.
+              Fifteen years of incident response trained this instinct.
+            </p>
+          </div>
+
+          <div class="workflow-step reveal">
+            <span class="workflow-num" aria-hidden="true">02</span>
+            <h3 class="workflow-title">Build with AI</h3>
+            <p class="workflow-copy">
+              Claude isn't a shortcut — it's a collaborator. I use it for architecture
+              review, debugging subtle logic, generating test cases, and iterating on
+              design decisions at a speed that would be impossible alone.
+            </p>
+          </div>
+
+          <div class="workflow-step reveal">
+            <span class="workflow-num" aria-hidden="true">03</span>
+            <h3 class="workflow-title">Ship and Sustain</h3>
+            <p class="workflow-copy">
+              Sysadmin discipline means caring about what happens after deployment.
+              Documentation that people actually read. Monitoring that catches problems
+              before users do. Code that the next person can understand.
+            </p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── Projects ──────────────────────────────────────────── -->
+    <section id="projects" class="section" aria-labelledby="projects-heading">
+      <div class="container">
+        <p class="section-label" id="projects-heading">Projects</p>
+        <div class="projects-grid">
+
+          <article class="project-card reveal">
+            <div class="project-card-inner">
+              <h3 class="project-name">GhostEditor</h3>
+              <p class="project-desc">
+                AI developmental editor for self-published authors. Analyzes manuscripts
+                chapter-by-chapter, generates story bibles from opening chapters, and
+                flags continuity errors — mimicking how a human editor builds context
+                over time. Built on Anthropic's Claude API.
+              </p>
+              <div class="project-tags" aria-label="Tech stack">
+                <span class="tag">Claude API</span>
+                <span class="tag">FastAPI</span>
+                <span class="tag">React</span>
+                <span class="tag">PostgreSQL</span>
+                <span class="tag">Redis</span>
+              </div>
+              <a
+                href="https://github.com/drinkyouroj/ghosteditor"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="project-link"
+                aria-label="View GhostEditor on GitHub (opens in new tab)"
+              >
+                View on GitHub
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M3 11L11 3M11 3H5M11 3v6"/>
+                </svg>
+              </a>
+            </div>
+          </article>
+
+          <article class="project-card reveal">
+            <div class="project-card-inner">
+              <h3 class="project-name">Thread Cartographer</h3>
+              <p class="project-desc">
+                Transforms Reddit comment threads into interactive force-directed graphs.
+                Nodes sized by upvote score, colored by AFINN sentiment analysis. Pan,
+                zoom, filter by depth and score. Makes large conversation topology
+                immediately visible.
+              </p>
+              <div class="project-tags" aria-label="Tech stack">
+                <span class="tag">Next.js</span>
+                <span class="tag">D3.js</span>
+                <span class="tag">Web Workers</span>
+                <span class="tag">Upstash Redis</span>
+                <span class="tag">NLP</span>
+              </div>
+              <a
+                href="https://github.com/drinkyouroj/thread-cartographer"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="project-link"
+                aria-label="View Thread Cartographer on GitHub (opens in new tab)"
+              >
+                View on GitHub
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M3 11L11 3M11 3H5M11 3v6"/>
+                </svg>
+              </a>
+            </div>
+          </article>
+
+          <article class="project-card reveal">
+            <div class="project-card-inner">
+              <h3 class="project-name">IntakeForm-AI</h3>
+              <p class="project-desc">
+                AI-powered intake form system that reduces manual data entry through
+                intelligent form processing. Built with Next.js and TypeScript, deployable
+                as an embeddable component. Active development with open pull requests.
+              </p>
+              <div class="project-tags" aria-label="Tech stack">
+                <span class="tag">Next.js</span>
+                <span class="tag">TypeScript</span>
+                <span class="tag">Drizzle ORM</span>
+                <span class="tag">Vitest</span>
+              </div>
+              <a
+                href="https://github.com/drinkyouroj/intakeform-ai"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="project-link"
+                aria-label="View IntakeForm-AI on GitHub (opens in new tab)"
+              >
+                View on GitHub
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M3 11L11 3M11 3H5M11 3v6"/>
+                </svg>
+              </a>
+            </div>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── Writing ───────────────────────────────────────────── -->
+    <section id="writing" class="section section-alt" aria-labelledby="writing-heading">
+      <div class="container">
+        <p class="section-label" id="writing-heading">Writing</p>
+        <div class="writing-grid">
+          <!-- Populated dynamically by fetchWritingPosts() in main.js -->
+          <p class="writing-loading" aria-live="polite">Loading posts…</p>
+        </div>
+        <div class="writing-footer reveal">
+          <a href="https://drinkyouroj.substack.com" target="_blank" rel="noopener noreferrer" class="writing-all-link">
+            View all writing on Substack →
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── Testimonials ────────────────────────────────────────── -->
+    <section id="testimonials" class="section" aria-labelledby="testimonials-heading">
+      <div class="container">
+        <p class="section-label" id="testimonials-heading">Testimonials</p>
+        <div class="testimonials-grid">
+          <!-- Populated dynamically by fetchTestimonials() in main.js -->
+          <p class="testimonials-loading" aria-live="polite">Loading testimonials…</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── Contact ───────────────────────────────────────────── -->
+    <section id="contact" class="section section-alt" aria-labelledby="contact-heading">
+      <div class="container">
+        <p class="section-label" id="contact-heading">Contact</p>
+        <div class="contact-inner reveal">
+          <p class="contact-line">Open to interesting problems.</p>
+          <nav class="contact-links" aria-label="Contact and social links">
+
+            <a href="https://github.com/drinkyouroj" target="_blank" rel="noopener noreferrer" class="contact-link" aria-label="GitHub profile (opens in new tab)">
+              <svg class="contact-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z"/>
+              </svg>
+              <span>GitHub</span>
+            </a>
+
+            <a href="https://www.linkedin.com/in/jhearn/" target="_blank" rel="noopener noreferrer" class="contact-link" aria-label="LinkedIn profile (opens in new tab)">
+              <svg class="contact-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+              </svg>
+              <span>LinkedIn</span>
+            </a>
+
+            <a href="https://drinkyouroj.substack.com" target="_blank" rel="noopener noreferrer" class="contact-link" aria-label="Substack newsletter (opens in new tab)">
+              <svg class="contact-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <path d="M22.539 8.242H1.46V5.406h21.08v2.836zM1.46 10.812V24L12 18.11 22.54 24V10.812H1.46zM22.54 0H1.46v2.836h21.08V0z"/>
+              </svg>
+              <span>Substack</span>
+            </a>
+
+            <a href="https://standardresume.co/r/justinhearn" target="_blank" rel="noopener noreferrer" class="contact-link" aria-label="Resume (opens in new tab)">
+              <svg class="contact-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true">
+                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+                <polyline points="10 9 9 9 8 9"/>
+              </svg>
+              <span>Resume</span>
+            </a>
+
+          </nav>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ─── Footer ────────────────────────────────────────────────── -->
+  <footer class="footer" role="contentinfo">
+    <div class="container">
+      <p class="footer-text">
+        Built with HTML, CSS, and AI. Justin Hearn © 2026.
+      </p>
+    </div>
+  </footer>
+
+  <!-- GSAP via CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js" defer></script>
+  <script src="main.js" defer></script>
+
+</body>
+</html>

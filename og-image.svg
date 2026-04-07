@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="30%" r="60%">
+      <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#0a0a0a" stop-opacity="0"/>
+    </radialGradient>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@600&amp;family=Inter:wght@400&amp;display=swap');
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#0a0a0a"/>
+  <!-- Glow -->
+  <rect width="1200" height="630" fill="url(#glow)"/>
+  <!-- Border -->
+  <rect x="1" y="1" width="1198" height="628" fill="none" stroke="#1e1e1e" stroke-width="2"/>
+
+  <!-- Label -->
+  <text x="600" y="220" text-anchor="middle"
+    font-family="'JetBrains Mono', monospace" font-size="16" font-weight="600"
+    fill="#3b82f6" letter-spacing="4">JUSTIN HEARN</text>
+
+  <!-- Headline -->
+  <text x="600" y="310" text-anchor="middle"
+    font-family="'JetBrains Mono', monospace" font-size="72" font-weight="600"
+    fill="#f0f0f0" letter-spacing="-2">AI-Augmented</text>
+  <text x="600" y="395" text-anchor="middle"
+    font-family="'JetBrains Mono', monospace" font-size="72" font-weight="600"
+    fill="#f0f0f0" letter-spacing="-2">Engineering</text>
+
+  <!-- Tagline -->
+  <text x="600" y="460" text-anchor="middle"
+    font-family="'Inter', sans-serif" font-size="20" font-weight="400"
+    fill="#6b7280">15+ years of systems thinking, now amplified by AI.</text>
+
+  <!-- Bottom bar -->
+  <rect x="0" y="620" width="1200" height="2" fill="#1e1e1e"/>
+  <text x="600" y="616" text-anchor="middle"
+    font-family="'JetBrains Mono', monospace" font-size="13"
+    fill="#3b7280" letter-spacing="1">drinkyouroj.github.io</text>
+</svg>
