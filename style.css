@@ -509,6 +509,31 @@ p { line-height: var(--line-height-relaxed); }
   will-change: transform;
 }
 
+/* ASCII portrait — centered behind hero headline as background texture */
+.hero-ascii {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 0;
+  font-family: var(--font-family-mono);
+  font-size: clamp(6.6px, 0.72vw, 11px);
+  line-height: 1;
+  white-space: pre;
+  color: var(--color-accent-primary);
+  opacity: 0.12;
+  pointer-events: none;
+  user-select: none;
+  margin: 0;
+  /* Fade in with the rest of the hero — GSAP will animate this */
+  will-change: opacity, transform;
+}
+
+/* Hide on screens where it would overlap the headline */
+@media (max-width: 900px) {
+  .hero-ascii { display: none; }
+}
+
 /* heroFadeIn removed — GSAP controls all hero element motion */
 
 .hero-label {
