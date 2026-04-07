@@ -23,9 +23,9 @@ Deployed on GitHub Pages at `https://www.justin.hearn.me`.
 ├── style.css               ← All component styles
 ├── tokens.css              ← Design system tokens (source of truth)
 ├── main.js                 ← Animations, scroll, live RSS fetch
-├── og-image.svg            ← Default OG/Twitter card (1200×630)
-├── pkm-llm-wiki-og-image.svg  ← Article-specific OG image
-├── justin_hearn.svg        ← Headshot (Person schema image)
+├── og-image.png            ← Default OG/Twitter card (1200×630)
+├── pkm-llm-wiki-og-image.png  ← Article-specific OG image
+├── justin_hearn.png        ← Headshot (Person schema image)
 ├── sitemap.xml             ← Submitted to Google Search Console
 ├── robots.txt              ← Crawl directives
 ├── CNAME                   ← GitHub Pages custom domain

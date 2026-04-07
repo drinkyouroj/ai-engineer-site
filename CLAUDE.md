@@ -102,9 +102,9 @@ Sub-pages (`pkm-llm-wiki.html`, `writing.html`, future essay pages) follow these
 | Element | Convention |
 |---|---|
 | Canonical URL | Always `https://www.justin.hearn.me/...` — never the old `drinkyouroj.github.io` domain |
-| OG image (default) | `og-image.svg` (1200×630, general portfolio) |
-| OG image (article) | Article-specific SVG, e.g. `pkm-llm-wiki-og-image.svg` |
-| Person schema image | `justin_hearn.svg` (headshot) |
+| OG image (default) | `og-image.png` (1200×630, general portfolio) |
+| OG image (article) | Article-specific PNG, e.g. `pkm-llm-wiki-og-image.png` |
+| Person schema image | `justin_hearn.png` (headshot) |
 | Article schema | Requires `image` field for Rich Results eligibility |
 | Sitemap | Update `sitemap.xml` when adding new indexable pages |
 
