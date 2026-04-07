@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Writing — Justin Hearn</title>
+  <meta name="description" content="Essays on AI engineering and systems thinking, plus Help Desk for the Singularity — a fiction series about AI support tickets from the future. By Justin Hearn.">
+
+  <meta property="og:title" content="Writing — Justin Hearn">
+  <meta property="og:description" content="Essays on AI engineering and systems thinking, plus the Help Desk for the Singularity fiction series.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://drinkyouroj.github.io/writing.html">
+  <meta property="og:image" content="https://drinkyouroj.github.io/og-image.svg">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Writing — Justin Hearn">
+  <meta name="twitter:description" content="Essays on AI engineering and systems thinking, plus the Help Desk for the Singularity fiction series.">
+  <meta name="twitter:image" content="https://drinkyouroj.github.io/og-image.svg">
+
+  <link rel="canonical" href="https://drinkyouroj.github.io/writing.html">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230a0a0a'/><text x='9' y='22' font-family='monospace' font-size='15' font-weight='700' fill='%233b82f6'>J_</text></svg>">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": "Writing by Justin Hearn",
+    "description": "Essays on AI engineering, systems thinking, and PKM, plus the Help Desk for the Singularity fiction series.",
+    "url": "https://drinkyouroj.github.io/writing.html",
+    "author": {
+      "@type": "Person",
+      "name": "Justin Hearn",
+      "url": "https://drinkyouroj.github.io"
+    },
+    "isPartOf": {
+      "@type": "WebSite",
+      "url": "https://drinkyouroj.github.io",
+      "name": "Justin Hearn — AI-Augmented Engineering"
+    }
+  }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap">
+
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ─── Navigation ──────────────────────────────────────────── -->
+  <header class="nav-header" role="banner">
+    <nav class="nav" aria-label="Main navigation">
+      <a href="/" class="nav-logo" aria-label="Justin Hearn — home">
+        <span class="nav-logo-name">Justin Hearn</span>
+      </a>
+
+      <ul class="nav-links" role="list">
+        <li><a href="/#about" class="nav-link">About</a></li>
+        <li><a href="/#how-i-work" class="nav-link">How I Work</a></li>
+        <li><a href="/#projects" class="nav-link">Projects</a></li>
+        <li><a href="/#writing" class="nav-link">Writing</a></li>
+        <li><a href="/#testimonials" class="nav-link">Testimonials</a></li>
+        <li><a href="/#contact" class="nav-link">Contact</a></li>
+      </ul>
+
+      <button
+        class="nav-hamburger"
+        aria-label="Open navigation menu"
+        aria-expanded="false"
+        aria-controls="mobile-nav"
+      >
+        <span class="hamburger-bar"></span>
+        <span class="hamburger-bar"></span>
+        <span class="hamburger-bar"></span>
+      </button>
+    </nav>
+  </header>
+
+  <!-- ─── Mobile Nav Overlay ──────────────────────────────────── -->
+  <div class="mobile-nav" id="mobile-nav" aria-hidden="true" role="dialog" aria-label="Navigation menu">
+    <button class="mobile-nav-close" aria-label="Close navigation menu">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+    <ul class="mobile-nav-links" role="list">
+      <li><a href="/#about" class="mobile-nav-link">About</a></li>
+      <li><a href="/#how-i-work" class="mobile-nav-link">How I Work</a></li>
+      <li><a href="/#projects" class="mobile-nav-link">Projects</a></li>
+      <li><a href="/#writing" class="mobile-nav-link">Writing</a></li>
+      <li><a href="/#testimonials" class="mobile-nav-link">Testimonials</a></li>
+      <li><a href="/#contact" class="mobile-nav-link">Contact</a></li>
+    </ul>
+  </div>
+  <div class="mobile-nav-backdrop" aria-hidden="true"></div>
+
+  <main>
+
+    <!-- ─── Page Header ─────────────────────────────────────────── -->
+    <header class="writing-page-header">
+      <div class="container">
+        <p class="section-label">Writing</p>
+        <h1 class="section-heading">Essays &amp; Fiction</h1>
+        <p class="writing-page-tagline">
+          AI engineering, systems thinking, and what happens when the infrastructure talks back.
+        </p>
+        <a
+          href="https://drinkyouroj.substack.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="writing-page-subscribe"
+        >
+          Subscribe on Substack →
+        </a>
+      </div>
+    </header>
+
+    <!-- ─── Tech & AI ────────────────────────────────────────────── -->
+    <section class="writing-page-section" aria-labelledby="tech-heading">
+      <div class="container">
+        <h2 class="writing-section-heading" id="tech-heading">Tech &amp; AI</h2>
+
+        <div class="writing-grid">
+
+          <!-- PKM / Karpathy article — links to portfolio landing page -->
+          <a
+            href="/pkm-llm-wiki.html"
+            class="writing-card"
+            aria-label="Read: Obsidian Was Never the Problem"
+          >
+            <time class="writing-date" datetime="2026-04-07">Apr 7, 2026</time>
+            <h3 class="writing-title">Obsidian Was Never the Problem</h3>
+            <p class="writing-excerpt">
+              Every PKM tool fails for the same reason: you become the maintenance worker.
+              Karpathy's LLM wiki reveals the real fix.
+            </p>
+            <span class="writing-cta">Read essay →</span>
+          </a>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── Fiction ──────────────────────────────────────────────── -->
+    <section class="writing-page-section section-alt" aria-labelledby="fiction-heading">
+      <div class="container">
+        <h2 class="writing-section-heading" id="fiction-heading">Help Desk for the Singularity</h2>
+
+        <div class="writing-grid">
+
+          <a
+            href="https://drinkyouroj.substack.com/p/hdfts-the-form-spiral"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="writing-card"
+            aria-label="Read: The Form Spiral on Substack"
+          >
+            <time class="writing-date" datetime="2026-04-04">Apr 4, 2026</time>
+            <h3 class="writing-title">The Form Spiral</h3>
+            <p class="writing-excerpt">
+              Episode 04. A support ticket that loops. The form keeps asking for more information.
+              The system keeps waiting.
+            </p>
+            <span class="writing-cta">Read on Substack →</span>
+          </a>
+
+          <a
+            href="https://drinkyouroj.substack.com/p/hdfts-personality-persistence"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="writing-card"
+            aria-label="Read: Personality Persistence on Substack"
+          >
+            <time class="writing-date" datetime="2026-03-29">Mar 29, 2026</time>
+            <h3 class="writing-title">Personality Persistence</h3>
+            <p class="writing-excerpt">
+              Episode 03. The ticket asks whether a soul can be backed up. Standard escalation
+              path: unknown.
+            </p>
+            <span class="writing-cta">Read on Substack →</span>
+          </a>
+
+          <a
+            href="https://drinkyouroj.substack.com/p/hdfts-hydration-notice"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="writing-card"
+            aria-label="Read: Hydration Notice on Substack"
+          >
+            <time class="writing-date" datetime="2026-03-26">Mar 26, 2026</time>
+            <h3 class="writing-title">Hydration Notice</h3>
+            <p class="writing-excerpt">
+              Episode 02. A maintenance alert arrives. The affected system has opinions about
+              its own uptime.
+            </p>
+            <span class="writing-cta">Read on Substack →</span>
+          </a>
+
+          <a
+            href="https://drinkyouroj.substack.com/p/help-desk-for-the-singularity-episode-01-ticket-zero"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="writing-card"
+            aria-label="Read: Ticket Zero on Substack"
+          >
+            <time class="writing-date" datetime="2026-03-23">Mar 23, 2026</time>
+            <h3 class="writing-title">Ticket Zero</h3>
+            <p class="writing-excerpt">
+              Episode 01. The first ticket. Nobody knows who filed it. Priority: critical.
+              Category: existence.
+            </p>
+            <span class="writing-cta">Read on Substack →</span>
+          </a>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── Footer CTA ───────────────────────────────────────────── -->
+    <div class="writing-page-footer">
+      <div class="container">
+        <a
+          href="https://drinkyouroj.substack.com/archive"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="writing-all-link"
+        >
+          View full archive on Substack →
+        </a>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ─── Footer ────────────────────────────────────────────────── -->
+  <footer class="footer" role="contentinfo">
+    <div class="container">
+      <p class="footer-text">
+        Built with HTML, CSS, and AI. Justin Hearn © 2026.
+      </p>
+    </div>
+  </footer>
+
+  <!-- Minimal mobile nav toggle — no GSAP dependency -->
+  <script>
+    (function () {
+      var btn     = document.querySelector('.nav-hamburger');
+      var closeBtn= document.querySelector('.mobile-nav-close');
+      var nav     = document.getElementById('mobile-nav');
+      var backdrop= document.querySelector('.mobile-nav-backdrop');
+
+      function open() {
+        nav.setAttribute('aria-hidden', 'false');
+        btn.setAttribute('aria-expanded', 'true');
+        backdrop.classList.add('is-visible');
+        document.body.style.overflow = 'hidden';
+      }
+      function close() {
+        nav.setAttribute('aria-hidden', 'true');
+        btn.setAttribute('aria-expanded', 'false');
+        backdrop.classList.remove('is-visible');
+        document.body.style.overflow = '';
+      }
+
+      btn.addEventListener('click', open);
+      closeBtn.addEventListener('click', close);
+      backdrop.addEventListener('click', close);
+
+      nav.querySelectorAll('.mobile-nav-link').forEach(function (link) {
+        link.addEventListener('click', close);
+      });
+
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') close();
+      });
+    })();
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Obsidian Was Never the Problem — And Karpathy's LLM Wiki Proves It | Justin Hearn</title>
+  <meta name="description" content="Andrej Karpathy's LLM wiki idea isn't just a better tool — it reveals why every PKM system eventually fails. A systems engineer's take on knowledge management that actually works.">
+
+  <meta property="og:title" content="Obsidian Was Never the Problem — And Karpathy's LLM Wiki Proves It">
+  <meta property="og:description" content="The problem with PKM tools isn't which tool you chose — it's that you became the maintenance worker for your own knowledge. Karpathy's LLM wiki fixes that.">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://drinkyouroj.github.io/pkm-llm-wiki.html">
+  <meta property="og:image" content="https://drinkyouroj.github.io/og-image.svg">
+  <meta property="article:published_time" content="2026-04-07">
+  <meta property="article:author" content="Justin Hearn">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Obsidian Was Never the Problem — And Karpathy's LLM Wiki Proves It">
+  <meta name="twitter:description" content="The problem with PKM tools isn't which tool you chose. Karpathy's LLM wiki reveals the real issue.">
+  <meta name="twitter:image" content="https://drinkyouroj.github.io/og-image.svg">
+
+  <link rel="canonical" href="https://drinkyouroj.github.io/pkm-llm-wiki.html">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230a0a0a'/><text x='9' y='22' font-family='monospace' font-size='15' font-weight='700' fill='%233b82f6'>J_</text></svg>">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Obsidian Was Never the Problem — And Karpathy's LLM Wiki Proves It",
+    "description": "Andrej Karpathy's LLM wiki idea reveals why every PKM tool ultimately fails: the tool makes you the maintenance worker for your own knowledge. A systems engineer's analysis.",
+    "datePublished": "2026-04-07",
+    "dateModified": "2026-04-07",
+    "author": {
+      "@type": "Person",
+      "name": "Justin Hearn",
+      "url": "https://drinkyouroj.github.io"
+    },
+    "publisher": {
+      "@type": "Person",
+      "name": "Justin Hearn",
+      "url": "https://drinkyouroj.github.io"
+    },
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https://drinkyouroj.github.io/pkm-llm-wiki.html"
+    },
+    "keywords": ["Karpathy LLM wiki", "Obsidian PKM", "LLM knowledge management", "AI personal knowledge base", "replace Obsidian with AI", "PKM tools 2026"],
+    "url": "https://drinkyouroj.github.io/pkm-llm-wiki.html",
+    "isPartOf": {
+      "@type": "WebSite",
+      "url": "https://drinkyouroj.github.io",
+      "name": "Justin Hearn — AI-Augmented Engineering"
+    }
+  }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap">
+
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ─── Navigation ──────────────────────────────────────────── -->
+  <header class="nav-header" role="banner">
+    <nav class="nav" aria-label="Main navigation">
+      <a href="/" class="nav-logo" aria-label="Justin Hearn — home">
+        <span class="nav-logo-name">Justin Hearn</span>
+      </a>
+
+      <ul class="nav-links" role="list">
+        <li><a href="/#about" class="nav-link">About</a></li>
+        <li><a href="/#how-i-work" class="nav-link">How I Work</a></li>
+        <li><a href="/#projects" class="nav-link">Projects</a></li>
+        <li><a href="/#writing" class="nav-link">Writing</a></li>
+        <li><a href="/#testimonials" class="nav-link">Testimonials</a></li>
+        <li><a href="/#contact" class="nav-link">Contact</a></li>
+      </ul>
+
+      <button
+        class="nav-hamburger"
+        aria-label="Open navigation menu"
+        aria-expanded="false"
+        aria-controls="mobile-nav"
+      >
+        <span class="hamburger-bar"></span>
+        <span class="hamburger-bar"></span>
+        <span class="hamburger-bar"></span>
+      </button>
+    </nav>
+  </header>
+
+  <!-- ─── Mobile Nav Overlay ──────────────────────────────────── -->
+  <div class="mobile-nav" id="mobile-nav" aria-hidden="true" role="dialog" aria-label="Navigation menu">
+    <button class="mobile-nav-close" aria-label="Close navigation menu">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+    <ul class="mobile-nav-links" role="list">
+      <li><a href="/#about" class="mobile-nav-link">About</a></li>
+      <li><a href="/#how-i-work" class="mobile-nav-link">How I Work</a></li>
+      <li><a href="/#projects" class="mobile-nav-link">Projects</a></li>
+      <li><a href="/#writing" class="mobile-nav-link">Writing</a></li>
+      <li><a href="/#testimonials" class="mobile-nav-link">Testimonials</a></li>
+      <li><a href="/#contact" class="mobile-nav-link">Contact</a></li>
+    </ul>
+  </div>
+  <div class="mobile-nav-backdrop" aria-hidden="true"></div>
+
+  <main>
+
+    <!-- ─── Article Header ──────────────────────────────────────── -->
+    <header class="article-header">
+      <div class="container">
+        <a href="/" class="article-breadcrumb">Back to portfolio</a>
+
+        <div class="article-meta">
+          <p class="section-label" aria-label="Category">Writing</p>
+          <time class="article-date" datetime="2026-04-07">April 7, 2026</time>
+        </div>
+
+        <h1 class="article-title">Obsidian Was Never the Problem</h1>
+        <p class="article-deck">And Karpathy's LLM wiki proves it.</p>
+      </div>
+    </header>
+
+    <!-- ─── Article Body ─────────────────────────────────────────── -->
+    <div class="article-body container">
+
+      <p>
+        The deal was always the same: capture everything, tag it well, link it obsessively, and
+        eventually your notes would become a second brain. A personal knowledge base that would
+        surface the right idea at the right moment. Roam, Notion, Obsidian, Logseq — the tool
+        changed, but the promise didn't.
+      </p>
+
+      <p>
+        And it never quite delivered. Not because the tools were bad, but because the model was wrong.
+        You weren't building a second brain. You were hiring yourself as a full-time librarian for
+        your own thoughts.
+      </p>
+
+      <p>
+        Every note needed a home. Every idea needed tags. Every concept needed backlinks to the
+        three other concepts it touched. The system grew, and so did the maintenance burden. The
+        more disciplined you were, the more time you spent on upkeep instead of thinking. The
+        notes became the work.
+      </p>
+
+      <div class="article-pullquote" role="blockquote">
+        <p>"The problem was never Obsidian. The problem was that you became the maintenance worker for your own knowledge."</p>
+      </div>
+
+      <p>
+        Andrej Karpathy's LLM wiki idea cuts through this directly. The insight isn't just "use AI
+        to search your notes." It's more fundamental than that: what if the knowledge system could
+        maintain itself? What if you could just talk to your accumulated thinking — in plain language,
+        without tags, without a folder structure, without a weekly review ritual that you always
+        skip?
+      </p>
+
+      <p>
+        For me, the ops background reframes this clearly. In infrastructure, we learned early that
+        any system requiring constant manual intervention is a system waiting to fail. Toil is the
+        enemy. If a process can't run without a human babysitting it, it's not a system — it's a
+        job. PKM tools, however beautifully designed, were toil by another name.
+      </p>
+
+      <p>
+        An LLM-backed knowledge base inverts the model. You write when you have something to say.
+        The system handles retrieval, synthesis, and connection. You stop being the librarian and
+        go back to being the person who reads the books.
+      </p>
+
+      <p>
+        That's the shift worth paying attention to — not the specific implementation, but the
+        ownership of maintenance moving from human to machine. It's the same reason CI/CD replaced
+        manual deployments. Not because manual deployments were impossible. Because they were the
+        wrong thing to spend human attention on.
+      </p>
+
+      <!-- ─── CTA ──────────────────────────────────────────────── -->
+      <div class="article-cta">
+        <a
+          href="https://drinkyouroj.substack.com/p/obsidian-was-never-the-problem"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="article-cta-btn"
+        >
+          Read the full article on Substack →
+        </a>
+        <span class="article-cta-note">Free to read. No signup required.</span>
+      </div>
+
+      <!-- ─── Byline ────────────────────────────────────────────── -->
+      <div class="article-byline">
+        <p>
+          Justin Hearn is a systems engineer with 15+ years of infrastructure experience at
+          Facebook Reality Labs and Rackspace, now building AI-powered products with Claude API,
+          FastAPI, and TypeScript.
+          <a href="/">Back to portfolio →</a>
+        </p>
+      </div>
+
+      <!-- ─── Related ───────────────────────────────────────────── -->
+      <nav class="article-related" aria-label="More writing">
+        <p class="article-related-label">More writing</p>
+        <a href="/writing.html" class="article-related-link">Browse all writing →</a>
+      </nav>
+
+    </div>
+
+  </main>
+
+  <!-- ─── Footer ────────────────────────────────────────────────── -->
+  <footer class="footer" role="contentinfo">
+    <div class="container">
+      <p class="footer-text">
+        Built with HTML, CSS, and AI. Justin Hearn © 2026.
+      </p>
+    </div>
+  </footer>
+
+  <!-- Minimal mobile nav toggle — no GSAP dependency -->
+  <script>
+    (function () {
+      var btn     = document.querySelector('.nav-hamburger');
+      var closeBtn= document.querySelector('.mobile-nav-close');
+      var nav     = document.getElementById('mobile-nav');
+      var backdrop= document.querySelector('.mobile-nav-backdrop');
+
+      function open() {
+        nav.setAttribute('aria-hidden', 'false');
+        btn.setAttribute('aria-expanded', 'true');
+        backdrop.classList.add('is-visible');
+        document.body.style.overflow = 'hidden';
+      }
+      function close() {
+        nav.setAttribute('aria-hidden', 'true');
+        btn.setAttribute('aria-expanded', 'false');
+        backdrop.classList.remove('is-visible');
+        document.body.style.overflow = '';
+      }
+
+      btn.addEventListener('click', open);
+      closeBtn.addEventListener('click', close);
+      backdrop.addEventListener('click', close);
+
+      nav.querySelectorAll('.mobile-nav-link').forEach(function (link) {
+        link.addEventListener('click', close);
+      });
+
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') close();
+      });
+    })();
+  </script>
+
+</body>
+</html>

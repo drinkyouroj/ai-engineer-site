@@ -566,10 +566,20 @@ async function fetchWritingPosts() {
     const data = await res.json();
     if (data.status !== 'ok') throw new Error('Feed error');
 
-    const items = data.items.slice(0, 3);
+    // Preserve the static featured card (data-static="true") before replacing children
+    const staticCard = grid.querySelector('[data-static]');
+
+    // Filter out the PKM article (already shown as the static card) and take next 3
+    const PKM_SLUG = 'obsidian-was-never-the-problem';
+    const items = data.items
+      .filter(item => !item.link.includes(PKM_SLUG))
+      .slice(0, 3);
 
     // Build card nodes — no innerHTML with untrusted data
     const fragment = document.createDocumentFragment();
+
+    // Re-attach the static card first so it always leads the grid
+    if (staticCard) fragment.appendChild(staticCard);
 
     items.forEach((item, i) => {
       // Strip HTML from description to get plain-text excerpt

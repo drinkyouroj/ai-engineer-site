@@ -13,6 +13,24 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="https://drinkyouroj.github.io/og-image.svg">
   <link rel="canonical" href="https://drinkyouroj.github.io">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "Justin Hearn",
+    "url": "https://drinkyouroj.github.io",
+    "jobTitle": "AI-Augmented Engineer",
+    "description": "15+ years of systems engineering — Linux, Chef, Ansible, incident response at Facebook Reality Labs and Rackspace — now building AI-powered products with Claude API, FastAPI, Next.js, and TypeScript.",
+    "knowsAbout": ["AI Engineering", "Systems Engineering", "Claude API", "FastAPI", "TypeScript", "Infrastructure Automation", "DevOps"],
+    "sameAs": [
+      "https://github.com/drinkyouroj",
+      "https://www.linkedin.com/in/jhearn/",
+      "https://drinkyouroj.substack.com",
+      "https://standardresume.co/r/justinhearn"
+    ],
+    "mainEntityOfPage": { "@type": "WebPage", "@id": "https://drinkyouroj.github.io" }
+  }
+  </script>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230a0a0a'/><text x='9' y='22' font-family='monospace' font-size='15' font-weight='700' fill='%233b82f6'>J_</text></svg>">
 
   <!-- Font preconnect hints — must precede the stylesheet request -->
@@ -356,6 +374,21 @@
       <div class="container">
         <p class="section-label" id="writing-heading">Writing</p>
         <div class="writing-grid" aria-live="polite" aria-label="Writing posts">
+          <!-- Featured article — static, preserved by fetchWritingPosts() in main.js -->
+          <a
+            href="/pkm-llm-wiki.html"
+            class="writing-card"
+            data-static="true"
+            aria-label="Read: Obsidian Was Never the Problem"
+          >
+            <time class="writing-date" datetime="2026-04-07">Apr 7, 2026</time>
+            <h3 class="writing-title">Obsidian Was Never the Problem</h3>
+            <p class="writing-excerpt">
+              Every PKM tool fails for the same reason: you become the maintenance worker.
+              Karpathy's LLM wiki reveals the real fix.
+            </p>
+            <span class="writing-cta">Read essay →</span>
+          </a>
           <!-- Skeleton cards — replaced by fetchWritingPosts() in main.js -->
           <div class="skeleton-writing" aria-hidden="true">
             <div class="skeleton-line skeleton-date"></div>
@@ -389,8 +422,11 @@
           </div>
         </div>
         <div class="writing-footer reveal">
+          <a href="/writing.html" class="writing-all-link">
+            Browse all writing →
+          </a>
           <a href="https://drinkyouroj.substack.com" target="_blank" rel="noopener noreferrer" class="writing-all-link">
-            View all writing on Substack →
+            View on Substack →
           </a>
         </div>
       </div>
