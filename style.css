@@ -576,11 +576,12 @@ p { line-height: var(--line-height-relaxed); }
   font-weight: 900;
   text-transform: uppercase;
   font-size: clamp(64px, 19.5vw, 340px);
-  letter-spacing: -0.055em;
+  letter-spacing: -0.08em;
   line-height: 0.85;
   white-space: nowrap;
   font-stretch: condensed;
   -webkit-font-smoothing: antialiased;
+  -webkit-text-stroke: 0.02em #fff;
 }
 
 .wordmark-word         { flex: 1; }
@@ -613,7 +614,7 @@ p { line-height: var(--line-height-relaxed); }
 .speech-bubble {
   position: absolute;
   left: 50%;
-  top: calc(50% - clamp(150px, 16vw, 300px));
+  top: calc(50% - clamp(100px, 11vw, 210px));
   transform: translate(-50%, -100%);
   z-index: 6;
   font-family: var(--font-family-mono);
