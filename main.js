@@ -65,6 +65,31 @@ function setupRibbonHero(prefersReducedMotion) {
     setInterval(() => { timeEl.textContent = formatTime(); }, 15000);
   }
 
+  // ── Wordmark auto-fit: CSS clamp handles the common case, but some
+  //    viewport / font combos (narrow landscape phones) still overflow
+  //    because `white-space: nowrap` can't self-correct. Measure after
+  //    layout and scale down via font-size if scrollWidth > container.
+  const wordmark = document.querySelector('.wordmark-inner');
+  const wordmarkHost = document.querySelector('.wordmark');
+  function fitWordmark() {
+    if (!wordmark || !wordmarkHost) return;
+    wordmark.style.fontSize = '';                          // reset to CSS
+    const avail = wordmarkHost.clientWidth * 0.96;         // 2% safety each side
+    // Binary shrink: halve the step each miss until within 1px
+    let fs = parseFloat(getComputedStyle(wordmark).fontSize);
+    let guard = 20;
+    while (wordmark.scrollWidth > avail && fs > 12 && guard--) {
+      fs *= avail / wordmark.scrollWidth;                  // proportional shrink
+      wordmark.style.fontSize = fs + 'px';
+    }
+  }
+  fitWordmark();
+  window.addEventListener('resize', fitWordmark);
+  // Re-fit after webfonts load (first paint uses fallback metrics)
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(fitWordmark);
+  }
+
   // ── Parallax: UI layer rises at 0.55× scroll so wordmark meets
   //    the content-scroll wrapper as it slides up (faithful to the
   //    framer-motion useTransform([0, vh], [0, -vh * 0.55]) math). ──

@@ -575,7 +575,7 @@ p { line-height: var(--line-height-relaxed); }
   font-family: var(--font-family-display);
   font-weight: 900;
   text-transform: uppercase;
-  font-size: clamp(64px, 19.5vw, 340px);
+  font-size: clamp(44px, 19.5vw, 340px);
   letter-spacing: -0.08em;
   line-height: 0.85;
   white-space: nowrap;
@@ -592,8 +592,8 @@ p { line-height: var(--line-height-relaxed); }
   position: relative;
   flex: 0 0 auto;
   overflow: visible;
-  width:  clamp(120px, 13vw, 240px);
-  height: clamp(140px, 15vw, 280px);
+  width:  clamp(72px, 11vw, 240px);
+  height: clamp(84px, 13vw, 280px);
 }
 
 .wordmark-character-img {
