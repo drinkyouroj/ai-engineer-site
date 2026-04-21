@@ -74,12 +74,17 @@ function setupRibbonHero(prefersReducedMotion) {
   function fitWordmark() {
     if (!wordmark || !wordmarkHost) return;
     wordmark.style.fontSize = '';                          // reset to CSS
-    const avail = wordmarkHost.clientWidth * 0.96;         // 2% safety each side
-    // Binary shrink: halve the step each miss until within 1px
+    // Target: text fills viewport minus ~2% breathing room on each side.
+    const avail = wordmarkHost.clientWidth * 0.96;
     let fs = parseFloat(getComputedStyle(wordmark).fontSize);
-    let guard = 20;
-    while (wordmark.scrollWidth > avail && fs > 12 && guard--) {
-      fs *= avail / wordmark.scrollWidth;                  // proportional shrink
+    // Proportional scaling: one or two iterations converge quickly.
+    // Grows as well as shrinks since `.wordmark-inner` is content-sized.
+    for (let i = 0; i < 6; i++) {
+      const actual = wordmark.offsetWidth;
+      if (actual <= 0) break;
+      const ratio = avail / actual;
+      if (Math.abs(ratio - 1) < 0.01) break;               // within 1% of target
+      fs = Math.max(12, Math.min(600, fs * ratio));
       wordmark.style.fontSize = fs + 'px';
     }
   }

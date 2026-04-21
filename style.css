@@ -565,11 +565,13 @@ p { line-height: var(--line-height-relaxed); }
 }
 
 .wordmark-inner {
-  display: flex;
+  /* Content-sized, not flex-1, so scrollWidth reflects actual text width
+     and the JS auto-fit can scale font-size to fill the viewport. */
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
-  padding: 0 3vw;
+  width: max-content;
+  max-width: 100%;
   margin: 0;
   color: #fff;
   font-family: var(--font-family-display);
@@ -584,7 +586,7 @@ p { line-height: var(--line-height-relaxed); }
   -webkit-text-stroke: 0.02em #fff;
 }
 
-.wordmark-word         { flex: 1; }
+.wordmark-word         { flex: 0 0 auto; }
 .wordmark-left         { text-align: right; padding-right: 0.06em; }
 .wordmark-right        { text-align: left;  padding-left:  0.06em; }
 
