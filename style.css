@@ -575,10 +575,12 @@ p { line-height: var(--line-height-relaxed); }
   font-family: var(--font-family-display);
   font-weight: 900;
   text-transform: uppercase;
-  font-size: clamp(48px, 13vw, 230px);
+  font-size: clamp(64px, 19.5vw, 340px);
   letter-spacing: -0.055em;
   line-height: 0.85;
   white-space: nowrap;
+  font-stretch: condensed;
+  -webkit-font-smoothing: antialiased;
 }
 
 .wordmark-word         { flex: 1; }
@@ -587,10 +589,10 @@ p { line-height: var(--line-height-relaxed); }
 
 .wordmark-character {
   position: relative;
-  flex: none;
+  flex: 0 0 auto;
   overflow: visible;
-  width:  clamp(180px, 18vw, 320px);
-  height: clamp(150px, 15vw, 270px);
+  width:  clamp(120px, 13vw, 240px);
+  height: clamp(140px, 15vw, 280px);
 }
 
 .wordmark-character-img {
@@ -598,11 +600,13 @@ p { line-height: var(--line-height-relaxed); }
   left: 50%;
   bottom: 0;
   transform: translateX(-50%);
-  height: 100%;
+  height: 115%;
   width: auto;
   image-rendering: pixelated;
+  image-rendering: crisp-edges;
   filter: drop-shadow(0 6px 0 rgba(0,0,0,0.35));
   pointer-events: none;
+  user-select: none;
 }
 
 /* Speech bubble — "LET'S BUILD!" above the character */

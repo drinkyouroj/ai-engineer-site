@@ -85,13 +85,14 @@ function setupRibbonHero(prefersReducedMotion) {
   if (prefersReducedMotion) return;
 
   // ── Canvas flow-field animation ──────────────────────────────────
+  // Defaults match the reference prototype (swirling-name-hero-portfolio)
   const C = {
-    pixel: 3, count: 70, width: 14, length: 200, speed: 36,
+    pixel: 3, count: 35, width: 14, length: 200, speed: 36,
     turb: 50, flow: 335, swirl: 71,
     mStr: 126, mRadius: 335, fade: 14, bgColor: '#0b0b0d',
     hue: 23, sat: 100, bri: 150,
   };
-  const PALETTE = ['#ff0040', '#ffffff', '#888888', '#202020'];
+  const PALETTE = ['#ff0040', '#ffffff', '#888888', '#202020']; // "noir"
 
   const ctx = canvas.getContext('2d');
   const low = document.createElement('canvas');
@@ -105,6 +106,7 @@ function setupRibbonHero(prefersReducedMotion) {
   const mouse = {
     x: -9999, y: -9999, tx: -9999, ty: -9999,
     vx: 0, vy: 0, px: -9999, py: -9999, inside: false,
+    trail: [],
   };
 
   function toLow(cx, cy) {
@@ -225,6 +227,24 @@ function setupRibbonHero(prefersReducedMotion) {
         r.life = r.maxLife = C.length * (0.6 + Math.random() * 0.8);
         r.w = C.width * (0.6 + Math.random() * 0.8);
       }
+    }
+
+    // Cursor trail (fading particles along the smoothed mouse path)
+    if (mouse.inside && mouse.x > -1000) {
+      mouse.trail.push({ x: mouse.x, y: mouse.y, life: 1 });
+      if (mouse.trail.length > 40) mouse.trail.shift();
+      for (let i = 0; i < mouse.trail.length; i++) {
+        const p = mouse.trail[i];
+        p.life -= 0.035;
+        if (p.life <= 0) continue;
+        const rgb = adjustColor(hexToRgb(PALETTE[i % PALETTE.length]), C);
+        const rad = Math.max(0.8, (C.width / Math.max(1, C.pixel)) * p.life * 0.9);
+        lctx.beginPath();
+        lctx.fillStyle = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${p.life})`;
+        lctx.arc(p.x, p.y, rad, 0, Math.PI * 2);
+        lctx.fill();
+      }
+      mouse.trail = mouse.trail.filter(p => p.life > 0);
     }
 
     // Upscale low-res canvas to main canvas (nearest-neighbor pixelated look)
