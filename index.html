@@ -61,138 +61,131 @@
   <!-- ─── Scroll Progress Bar ─────────────────────────────────── -->
   <div class="scroll-progress" aria-hidden="true"></div>
 
-  <!-- ─── Navigation ──────────────────────────────────────────── -->
-  <header class="nav-header" role="banner">
-    <nav class="nav" aria-label="Main navigation">
-      <a href="#hero" class="nav-logo" aria-label="Justin Hearn — home">
-        <span class="nav-logo-name">Justin Hearn</span>
-      </a>
+  <!-- ─── Hero (sticky ribbon canvas + parallax wordmark) ─────── -->
+  <section id="hero" class="ribbon-hero" aria-labelledby="hero-heading">
+    <canvas class="ribbon-canvas" aria-hidden="true"></canvas>
 
-      <ul class="nav-links" role="list">
-        <li><a href="#about" class="nav-link" data-section="about">About</a></li>
-        <li><a href="#how-i-work" class="nav-link" data-section="how-i-work">How I Work</a></li>
-        <li><a href="#projects" class="nav-link" data-section="projects">Projects</a></li>
-        <li><a href="#writing" class="nav-link" data-section="writing">Writing</a></li>
-        <li><a href="#testimonials" class="nav-link" data-section="testimonials">Testimonials</a></li>
-        <li><a href="#contact" class="nav-link" data-section="contact">Contact</a></li>
-        <li><a href="https://wiki.hearn.me" class="nav-link" target="_blank" rel="noopener">Wiki</a></li>
-      </ul>
+    <div class="ribbon-ui">
+      <!-- Top meta strip -->
+      <div class="ribbon-meta ribbon-meta-top">
+        <div class="ribbon-meta-left">
+          <span class="ribbon-live-dot" aria-hidden="true"></span>
+          LIVE <span class="ribbon-time" aria-label="Local time">--:--</span>
+        </div>
+        <div class="ribbon-meta-right">
+          <a href="mailto:hello@justin.hearn.me" class="ribbon-link">HELLO@JUSTIN.HEARN.ME</a>
+          <span class="ribbon-sep" aria-hidden="true">·</span>
+          <a href="https://www.linkedin.com/in/jhearn/" target="_blank" rel="noopener noreferrer" class="ribbon-link">LINKEDIN</a>
+        </div>
+      </div>
 
-      <button
-        class="nav-hamburger"
-        aria-label="Open navigation menu"
-        aria-expanded="false"
-        aria-controls="mobile-nav"
-      >
-        <span class="hamburger-bar"></span>
-        <span class="hamburger-bar"></span>
-        <span class="hamburger-bar"></span>
+      <!-- Wordmark -->
+      <div class="wordmark" aria-hidden="true">
+        <h1 id="hero-heading" class="wordmark-inner">
+          <span class="wordmark-word wordmark-left">JUSTIN</span>
+          <span class="wordmark-character">
+            <img src="character.png" alt="" class="wordmark-character-img">
+          </span>
+          <span class="wordmark-word wordmark-right">HEARN</span>
+        </h1>
+        <span class="sr-only">Justin Hearn — AI-Augmented Engineering</span>
+      </div>
+
+      <!-- Speech bubble -->
+      <div class="speech-bubble" aria-hidden="true">
+        LET&rsquo;S BUILD!
+        <span class="speech-bubble-tail" aria-hidden="true"></span>
+      </div>
+
+      <!-- Bottom meta strip -->
+      <div class="ribbon-meta ribbon-meta-bottom">
+        <div class="ribbon-meta-left">
+          <span>AI-AUGMENTED ENGINEERING</span>
+          <span class="ribbon-meta-sub">BASED IN SOUTHEAST MICHIGAN</span>
+        </div>
+        <div class="ribbon-scroll-hint">▼ SCROLL</div>
+        <div class="ribbon-meta-right">
+          <span>SYSTEMS · AI INTEGRATION</span>
+          <span class="ribbon-meta-sub">FULL-STACK · INFRASTRUCTURE</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── Scrolling content overlay ───────────────────────────── -->
+  <div class="content-scroll">
+
+    <!-- ─── Marquee (scrolling strip below hero) ──────────────── -->
+    <div class="marquee" aria-hidden="true">
+      <div class="marquee-track">
+        <span class="marquee-item">Available for Work <span class="marquee-star">✦</span></span>
+        <span class="marquee-item">AI-Augmented Engineering <span class="marquee-star">✦</span></span>
+        <span class="marquee-item">Based in Southeast Michigan <span class="marquee-star">✦</span></span>
+        <span class="marquee-item">15+ Years Shipping <span class="marquee-star">✦</span></span>
+        <span class="marquee-item">Let&rsquo;s Build Something <span class="marquee-star">✦</span></span>
+        <span class="marquee-item">Available for Work <span class="marquee-star">✦</span></span>
+        <span class="marquee-item">AI-Augmented Engineering <span class="marquee-star">✦</span></span>
+        <span class="marquee-item">Based in Southeast Michigan <span class="marquee-star">✦</span></span>
+        <span class="marquee-item">15+ Years Shipping <span class="marquee-star">✦</span></span>
+        <span class="marquee-item">Let&rsquo;s Build Something <span class="marquee-star">✦</span></span>
+        <span class="marquee-item">Available for Work <span class="marquee-star">✦</span></span>
+        <span class="marquee-item">AI-Augmented Engineering <span class="marquee-star">✦</span></span>
+        <span class="marquee-item">Based in Southeast Michigan <span class="marquee-star">✦</span></span>
+        <span class="marquee-item">15+ Years Shipping <span class="marquee-star">✦</span></span>
+        <span class="marquee-item">Let&rsquo;s Build Something <span class="marquee-star">✦</span></span>
+      </div>
+    </div>
+
+    <!-- ─── Navigation (sticky — appears below fold, pins to top) ─ -->
+    <header class="nav-header" role="banner">
+      <nav class="nav" aria-label="Main navigation">
+        <a href="#hero" class="nav-logo" aria-label="Justin Hearn — home">
+          <span class="nav-logo-name">Justin Hearn</span>
+        </a>
+
+        <ul class="nav-links" role="list">
+          <li><a href="#about" class="nav-link" data-section="about">About</a></li>
+          <li><a href="#how-i-work" class="nav-link" data-section="how-i-work">How I Work</a></li>
+          <li><a href="#projects" class="nav-link" data-section="projects">Projects</a></li>
+          <li><a href="#writing" class="nav-link" data-section="writing">Writing</a></li>
+          <li><a href="#testimonials" class="nav-link" data-section="testimonials">Testimonials</a></li>
+          <li><a href="#contact" class="nav-link" data-section="contact">Contact</a></li>
+          <li><a href="https://wiki.hearn.me" class="nav-link" target="_blank" rel="noopener">Wiki</a></li>
+        </ul>
+
+        <button
+          class="nav-hamburger"
+          aria-label="Open navigation menu"
+          aria-expanded="false"
+          aria-controls="mobile-nav"
+        >
+          <span class="hamburger-bar"></span>
+          <span class="hamburger-bar"></span>
+          <span class="hamburger-bar"></span>
+        </button>
+      </nav>
+    </header>
+
+    <!-- ─── Mobile Nav Overlay ────────────────────────────────── -->
+    <div class="mobile-nav" id="mobile-nav" aria-hidden="true" role="dialog" aria-label="Navigation menu">
+      <button class="mobile-nav-close" aria-label="Close navigation menu">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
       </button>
-    </nav>
-  </header>
-
-  <!-- ─── Mobile Nav Overlay ──────────────────────────────────── -->
-  <div class="mobile-nav" id="mobile-nav" aria-hidden="true" role="dialog" aria-label="Navigation menu">
-    <button class="mobile-nav-close" aria-label="Close navigation menu">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-      </svg>
-    </button>
-    <ul class="mobile-nav-links" role="list">
-      <li><a href="#about" class="mobile-nav-link">About</a></li>
-      <li><a href="#how-i-work" class="mobile-nav-link">How I Work</a></li>
-      <li><a href="#projects" class="mobile-nav-link">Projects</a></li>
-      <li><a href="#writing" class="mobile-nav-link">Writing</a></li>
-      <li><a href="#testimonials" class="mobile-nav-link">Testimonials</a></li>
-      <li><a href="#contact" class="mobile-nav-link">Contact</a></li>
-      <li><a href="https://wiki.hearn.me" class="mobile-nav-link" target="_blank" rel="noopener">Wiki</a></li>
-    </ul>
-  </div>
-  <div class="mobile-nav-backdrop" aria-hidden="true"></div>
+      <ul class="mobile-nav-links" role="list">
+        <li><a href="#about" class="mobile-nav-link">About</a></li>
+        <li><a href="#how-i-work" class="mobile-nav-link">How I Work</a></li>
+        <li><a href="#projects" class="mobile-nav-link">Projects</a></li>
+        <li><a href="#writing" class="mobile-nav-link">Writing</a></li>
+        <li><a href="#testimonials" class="mobile-nav-link">Testimonials</a></li>
+        <li><a href="#contact" class="mobile-nav-link">Contact</a></li>
+        <li><a href="https://wiki.hearn.me" class="mobile-nav-link" target="_blank" rel="noopener">Wiki</a></li>
+      </ul>
+    </div>
+    <div class="mobile-nav-backdrop" aria-hidden="true"></div>
 
   <main>
-
-    <!-- ─── Hero ──────────────────────────────────────────────── -->
-    <section id="hero" class="hero" aria-labelledby="hero-heading">
-      <div class="hero-glow" aria-hidden="true"></div>
-
-      <!-- ASCII portrait — purely decorative atmosphere -->
-      <pre class="hero-ascii" aria-hidden="true">
-                                                                                       
-                                      █  ████████                                      
-                                   █ █████   ████████                                  
-                                  █ █████████████ ████ ██                              
-                           █    ██████ █   ████   ███████  ██                          
-                         ███ █████   █ ███ █  ███ ███████ ███                          
-                        ███               ███ ██████████████████                       
-                   ███       █     ██████████████████████████████                      
-                          ██████  ████████████████████████████████                     
-                  █ █  ███ ██   ██████████████████████████████████                     
-                  ██ ████ ███████████████████ ███ ████████████████                     
-                 ██ ████████████ █ ███  █████   ██   █████████████                     
-                ███████████████  █  ██     ███    ██  ████████████                     
-              ███████████    █   █   ██      ██    ██  █  █████████                    
-             █ ██████████                              █   ████████                    
-              ███████████                                   ███████                    
-              █████████                                     ███████                    
-               ████████                                     ███████                    
-                ███████                                     ██████                     
-                 ███████                            ██    ███ █                        
-                  ████████                     █████ ████████████                      
-                    █████    ███████        ████████  █   ███ ██                       
-                  ████ ██████████████████████     ███  █  ██                           
-                    █████   █  ██    ████  ██             ██                           
-                     ████   █        ███   ██             ██ █                         
-                    █████             ██    ██           ██                            
-                     █████           ███      ███   █████    █                         
-                      █████        ███                       █                         
-                       ███████████     █                                               
-                         ██         █   █         ██ ███     █                         
-                           █        ██         █████████                               
-                                █████████    █████████ █                               
-                           █   █████████████████   █        █████                      
-                           █   ██                ██         ████████████               
-                           ███        ███████████        █    █████████████████        
-                       ██████████                      ███  █ ███████████████████████  
-                    ██████████████    ███ ███████      ██   █ █████████████████████████
-               ████████████████████                  ███    █ █████████████████████████
-            █████████████████████████               ██      ███████████████████████████
-        ██████████████████████████████             █          █████████████████████████
-      ████████████████████████████ █████        ██           ██████████████████████████
-   ████████████████████████████████   ████████  █            ██████████████████████████
-████████████████████████████████████    ██  █   █           ███████████████████████████
-███████████████████████████████████ █   ███        █      █████████████████████████████
-████████████████████████████████████     ████            ██████████████████████████████
-██████████████████████████████████████                 ████████████████████████████████
-███████████████████████████████████████              ██████████████████████████████████
-</pre>
-
-      <!-- Floating terminal snippets — purely decorative atmosphere -->
-      <div class="hero-floats" aria-hidden="true">
-        <span class="hero-float" style="--f-x: 12%; --f-y: 22%; --f-delay: 0s;">$ claude build</span>
-        <span class="hero-float" style="--f-x: 78%; --f-y: 18%; --f-delay: 0.4s;">&gt; analyzing context...</span>
-        <span class="hero-float" style="--f-x: 8%;  --f-y: 68%; --f-delay: 0.8s;">$ git commit -m "shipped"</span>
-        <span class="hero-float" style="--f-x: 72%; --f-y: 72%; --f-delay: 1.2s;">&gt; 847 tokens processed</span>
-        <span class="hero-float" style="--f-x: 20%; --f-y: 82%; --f-delay: 0.2s;">const agent = new Claude()</span>
-        <span class="hero-float" style="--f-x: 65%; --f-y: 42%; --f-delay: 1.0s;">✓ build complete</span>
-      </div>
-
-      <div class="hero-inner">
-        <p class="hero-label">Justin Hearn</p>
-        <h1 id="hero-heading" class="hero-headline">
-          AI&#8209;Augmented<br>Engineering
-        </h1>
-        <p class="hero-tagline">
-          15+ years of systems thinking,<br class="hero-tagline-break"> now amplified by AI.
-        </p>
-        <a href="#about" class="hero-scroll" aria-label="Scroll to About section">
-          <span class="hero-scroll-label">Scroll</span>
-          <svg class="hero-scroll-icon" width="16" height="20" viewBox="0 0 16 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-            <path d="M8 3v14M2 13l6 6 6-6"/>
-          </svg>
-        </a>
-      </div>
-    </section>
 
     <!-- ─── About ─────────────────────────────────────────────── -->
     <section id="about" class="section" aria-labelledby="about-heading">
@@ -557,6 +550,8 @@
       </p>
     </div>
   </footer>
+
+  </div><!-- /.content-scroll -->
 
   <!-- GSAP via CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js" defer></script>

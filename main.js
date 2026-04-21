@@ -2,16 +2,14 @@
  * main.js — AI-Augmented Engineering Portfolio
  *
  * Effects:
- *   1. Scroll progress bar
- *   2. Hero parallax (content + glow move at different depths)
- *   3. Floating hero terminal snippets (GSAP fade in + CSS drift)
- *   4. About columns: horizontal slide-in from opposite sides
- *   5. How I Work: staggered scrub (tied to scroll, not snap)
- *   6. Project cards: staggered reveal + 3D tilt on hover
- *   7. Writing cards: staggered reveal
- *   8. Nav: backdrop blur on scroll
- *   9. Nav: active section tracking
- *  10. Mobile nav
+ *   1. Ribbon hero: canvas flow-field animation + wordmark parallax + live clock
+ *   2. Scroll progress bar
+ *   3. About columns: horizontal slide-in from opposite sides
+ *   4. How I Work: staggered scrub (tied to scroll, not snap)
+ *   5. Project cards: staggered reveal + 3D tilt on hover
+ *   6. Writing cards: staggered reveal
+ *   7. Nav: sticky — active section tracking
+ *   8. Mobile nav
  */
 
 'use strict';
@@ -21,8 +19,8 @@ window.addEventListener('load', init);
 function init() {
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  setupRibbonHero(prefersReducedMotion);
   setupScrollProgress();
-  setupNav();
   setupActiveNavTracking();
   setupMobileNav();
   setup3DCardTilt();
@@ -35,18 +33,292 @@ function init() {
     gsap.registerPlugin(ScrollTrigger);
 
     if (prefersReducedMotion) {
-      // Immediately show all reveal elements — no animation
-      gsap.set('.reveal, .hero-float', { opacity: 1, x: 0, y: 0 });
+      gsap.set('.reveal', { opacity: 1, x: 0, y: 0 });
     } else {
       configureScrollAnimations();
     }
   } else {
-    // GSAP unavailable — show all content
-    document.querySelectorAll('.reveal, .hero-float').forEach(el => {
+    document.querySelectorAll('.reveal').forEach(el => {
       el.style.opacity = '1';
       el.style.transform = 'none';
     });
   }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// RIBBON HERO — flow-field canvas + wordmark parallax + live clock
+// Ported from digital-designer-portfolio/src/components/RibbonHero.tsx
+// (React + framer-motion → vanilla canvas + rAF + scroll listener)
+// ─────────────────────────────────────────────────────────────────
+function setupRibbonHero(prefersReducedMotion) {
+  const hero   = document.querySelector('.ribbon-hero');
+  const canvas = document.querySelector('.ribbon-canvas');
+  const ui     = document.querySelector('.ribbon-ui');
+  const timeEl = document.querySelector('.ribbon-time');
+  if (!hero || !canvas || !ui) return;
+
+  // ── Live clock (updates every 15s, matches original cadence) ─────
+  const formatTime = () =>
+    new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+  if (timeEl) {
+    timeEl.textContent = formatTime();
+    setInterval(() => { timeEl.textContent = formatTime(); }, 15000);
+  }
+
+  // ── Parallax: UI layer rises at 0.55× scroll so wordmark meets
+  //    the content-scroll wrapper as it slides up (faithful to the
+  //    framer-motion useTransform([0, vh], [0, -vh * 0.55]) math). ──
+  let ticking = false;
+  function updateParallax() {
+    const vh = window.innerHeight;
+    const y  = Math.min(window.scrollY, vh) * -0.55;
+    ui.style.transform = `translate3d(0, ${y}px, 0)`;
+    ticking = false;
+  }
+  window.addEventListener('scroll', () => {
+    if (!ticking) { requestAnimationFrame(updateParallax); ticking = true; }
+  }, { passive: true });
+  window.addEventListener('resize', updateParallax);
+  updateParallax();
+
+  // Reduced motion: show a static background color + skip canvas rAF.
+  if (prefersReducedMotion) return;
+
+  // ── Canvas flow-field animation ──────────────────────────────────
+  const C = {
+    pixel: 3, count: 70, width: 14, length: 200, speed: 36,
+    turb: 50, flow: 335, swirl: 71,
+    mStr: 126, mRadius: 335, fade: 14, bgColor: '#0b0b0d',
+    hue: 23, sat: 100, bri: 150,
+  };
+  const PALETTE = ['#ff0040', '#ffffff', '#888888', '#202020'];
+
+  const ctx = canvas.getContext('2d');
+  const low = document.createElement('canvas');
+  const lctx = low.getContext('2d');
+  const noise2 = makeValueNoise(42);
+
+  let ribbons = [];
+  let rafId = null;
+  let last = performance.now();
+
+  const mouse = {
+    x: -9999, y: -9999, tx: -9999, ty: -9999,
+    vx: 0, vy: 0, px: -9999, py: -9999, inside: false,
+  };
+
+  function toLow(cx, cy) {
+    return {
+      x: (cx / window.innerWidth)  * low.width,
+      y: (cy / window.innerHeight) * low.height,
+    };
+  }
+
+  function resetRibbons() {
+    const W = low.width, H = low.height;
+    ribbons = [];
+    for (let i = 0; i < C.count; i++) {
+      ribbons.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        colorIdx: i % PALETTE.length,
+        life: Math.random() * C.length,
+        maxLife: C.length,
+        w: C.width * (0.6 + Math.random() * 0.8),
+      });
+    }
+  }
+
+  function resize() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width  = Math.floor(window.innerWidth * dpr);
+    canvas.height = Math.floor(window.innerHeight * dpr);
+    canvas.style.width  = window.innerWidth  + 'px';
+    canvas.style.height = window.innerHeight + 'px';
+    low.width  = Math.max(2, Math.floor(window.innerWidth  / C.pixel));
+    low.height = Math.max(2, Math.floor(window.innerHeight / C.pixel));
+    lctx.fillStyle = C.bgColor;
+    lctx.fillRect(0, 0, low.width, low.height);
+    resetRibbons();
+  }
+
+  function step(now) {
+    const dt = Math.min(0.05, (now - last) / 1000);
+    last = now;
+    const W = low.width, H = low.height;
+
+    // Fade previous frame toward bg — creates the ribbon trails
+    lctx.globalCompositeOperation = 'source-over';
+    lctx.fillStyle = C.bgColor;
+    lctx.globalAlpha = Math.max(0.02, C.fade / 100);
+    lctx.fillRect(0, 0, W, H);
+    lctx.globalAlpha = 1;
+
+    const speed = C.speed / 30;
+    const flowScale = C.flow / 100;
+    const turb  = C.turb  / 50;
+    const swirl = C.swirl / 60;
+    const t = now * 0.00015 * (1 + C.speed / 150);
+
+    // Smooth mouse follow
+    if (mouse.inside) {
+      if (mouse.x < -1000) { mouse.x = mouse.tx; mouse.y = mouse.ty; }
+      mouse.px = mouse.x; mouse.py = mouse.y;
+      mouse.x += (mouse.tx - mouse.x) * 0.18;
+      mouse.y += (mouse.ty - mouse.y) * 0.18;
+      mouse.vx = mouse.x - mouse.px;
+      mouse.vy = mouse.y - mouse.py;
+    } else {
+      mouse.vx *= 0.9; mouse.vy *= 0.9;
+    }
+
+    const mOn = mouse.inside;
+    const mRadius = C.mRadius / Math.max(1, C.pixel);
+    const mStr = C.mStr / 50;
+
+    for (const r of ribbons) {
+      const flowOX = mOn ? (mouse.x / W - 0.5) * 0.6 : 0;
+      const flowOY = mOn ? (mouse.y / H - 0.5) * 0.6 : 0;
+      const nx = r.x / (W / flowScale) * 0.8;
+      const ny = r.y / (H / flowScale) * 0.8;
+      const n  = noise2(nx + t + flowOX, ny - t * 0.6 + flowOY);
+      const ang   = Math.atan2(r.y - H / 2, r.x - W / 2) + Math.PI / 2;
+      const angle = n * Math.PI * 2 * (1 + turb);
+      let vx = Math.cos(angle) + Math.cos(ang) * swirl * 0.3;
+      let vy = Math.sin(angle) + Math.sin(ang) * swirl * 0.3;
+
+      if (mOn) {
+        const mdx = r.x - mouse.x, mdy = r.y - mouse.y;
+        const dist = Math.sqrt(mdx * mdx + mdy * mdy) + 0.0001;
+        if (dist < mRadius) {
+          // 'flow' mouse mode: ribbons get pushed by cursor velocity
+          const f = Math.pow(1 - dist / mRadius, 2) * mStr;
+          vx += mouse.vx * f * 0.6;
+          vy += mouse.vy * f * 0.6;
+        }
+      }
+
+      const nextX = r.x + vx * speed * dt * 60;
+      const nextY = r.y + vy * speed * dt * 60;
+      const rgb = adjustColor(hexToRgb(PALETTE[r.colorIdx]), C);
+      const radius = Math.max(0.5, r.w / (C.pixel < 3 ? 4 : 6));
+
+      lctx.beginPath();
+      lctx.fillStyle = `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
+      lctx.arc(r.x, r.y, radius, 0, Math.PI * 2);
+      lctx.fill();
+      lctx.strokeStyle = `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
+      lctx.lineWidth = radius * 2;
+      lctx.lineCap = 'round';
+      lctx.beginPath();
+      lctx.moveTo(r.x, r.y);
+      lctx.lineTo(nextX, nextY);
+      lctx.stroke();
+
+      r.x = nextX; r.y = nextY; r.life--;
+      if (r.x < -20 || r.x > W + 20 || r.y < -20 || r.y > H + 20 || r.life <= 0) {
+        const side = Math.floor(Math.random() * 4);
+        if      (side === 0) { r.x = Math.random() * W; r.y = -5; }
+        else if (side === 1) { r.x = W + 5;             r.y = Math.random() * H; }
+        else if (side === 2) { r.x = Math.random() * W; r.y = H + 5; }
+        else                 { r.x = -5;                r.y = Math.random() * H; }
+        r.life = r.maxLife = C.length * (0.6 + Math.random() * 0.8);
+        r.w = C.width * (0.6 + Math.random() * 0.8);
+      }
+    }
+
+    // Upscale low-res canvas to main canvas (nearest-neighbor pixelated look)
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(low, 0, 0, canvas.width, canvas.height);
+
+    // Scanlines overlay
+    ctx.globalCompositeOperation = 'multiply';
+    const scanStep = Math.max(2, C.pixel * 2);
+    ctx.fillStyle = 'rgba(0,0,0,0.35)';
+    for (let y = 0; y < canvas.height; y += scanStep) {
+      ctx.fillRect(0, y, canvas.width, Math.floor(scanStep / 2));
+    }
+    ctx.globalCompositeOperation = 'source-over';
+
+    rafId = requestAnimationFrame(step);
+  }
+
+  function onMove(e) {
+    const p = toLow(e.clientX, e.clientY);
+    mouse.tx = p.x; mouse.ty = p.y; mouse.inside = true;
+  }
+  function onLeave() { mouse.inside = false; }
+
+  // Pause rAF when hero is scrolled off-screen (battery + perf)
+  const io = new IntersectionObserver(([entry]) => {
+    if (entry.isIntersecting) {
+      if (!rafId) { last = performance.now(); rafId = requestAnimationFrame(step); }
+    } else if (rafId) {
+      cancelAnimationFrame(rafId); rafId = null;
+    }
+  }, { threshold: 0 });
+  io.observe(hero);
+
+  window.addEventListener('pointermove',  onMove,  { passive: true });
+  window.addEventListener('pointerleave', onLeave);
+  window.addEventListener('resize', resize);
+
+  resize();
+  rafId = requestAnimationFrame(step);
+}
+
+// Smooth value-noise (Perlin-ish, no dependencies)
+function makeValueNoise(seed) {
+  let s = seed >>> 0;
+  const rand = () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
+  const SZ = 256;
+  const vals = new Float32Array(SZ * SZ);
+  for (let i = 0; i < vals.length; i++) vals[i] = rand();
+  const sm = (t) => t * t * (3 - 2 * t);
+  return (x, y) => {
+    const xi = Math.floor(x), yi = Math.floor(y);
+    const x0 = ((xi % SZ) + SZ) % SZ, y0 = ((yi % SZ) + SZ) % SZ;
+    const x1 = (x0 + 1) % SZ,         y1 = (y0 + 1) % SZ;
+    const a = vals[y0 * SZ + x0], b = vals[y0 * SZ + x1];
+    const c = vals[y1 * SZ + x0], d = vals[y1 * SZ + x1];
+    const u = sm(x - xi), v = sm(y - yi);
+    return a * (1 - u) * (1 - v) + b * u * (1 - v) + c * (1 - u) * v + d * u * v;
+  };
+}
+
+function hexToRgb(hex) {
+  const h = hex.replace('#', '');
+  const n = parseInt(h.length === 3 ? h.split('').map(c => c + c).join('') : h, 16);
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+}
+
+// HSL-space color adjust (hue shift + sat + bright) matching the React version
+function adjustColor([r, g, b], C) {
+  const rn = r / 255, gn = g / 255, bn = b / 255;
+  const max = Math.max(rn, gn, bn), min = Math.min(rn, gn, bn);
+  let h = 0, sat = 0;
+  const l = (max + min) / 2;
+  if (max !== min) {
+    const d = max - min;
+    sat = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+    if      (max === rn) h = ((gn - bn) / d + (gn < bn ? 6 : 0)) * 60;
+    else if (max === gn) h = ((bn - rn) / d + 2) * 60;
+    else                 h = ((rn - gn) / d + 4) * 60;
+  }
+  const hh = (h + C.hue + 360) % 360;
+  const ss = Math.max(0, Math.min(1, sat * (C.sat / 100)));
+  const ll = Math.max(0, Math.min(1, l * (C.bri / 100)));
+  const cc = (1 - Math.abs(2 * ll - 1)) * ss;
+  const hp = hh / 60, x = cc * (1 - Math.abs(hp % 2 - 1));
+  let rp = 0, gp = 0, bp = 0;
+  if      (hp < 1) { rp = cc; gp = x;  }
+  else if (hp < 2) { rp = x;  gp = cc; }
+  else if (hp < 3) { gp = cc; bp = x;  }
+  else if (hp < 4) { gp = x;  bp = cc; }
+  else if (hp < 5) { rp = x;  bp = cc; }
+  else             { rp = cc; bp = x;  }
+  const m = ll - cc / 2;
+  return [Math.round((rp + m) * 255), Math.round((gp + m) * 255), Math.round((bp + m) * 255)];
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -76,97 +348,10 @@ function setupScrollProgress() {
 // ─────────────────────────────────────────────────────────────────
 function configureScrollAnimations() {
 
-  // ── 1. Hero: label + tagline fade in, headline does the scramble ──
-  const heroTl = gsap.timeline({ defaults: { ease: 'power2.out' } });
-  heroTl
-    .fromTo('.hero-label',   { opacity: 0, y: 12 }, { opacity: 1,    y: 0, duration: 0.6 }, 0.1)
-    .fromTo('.hero-tagline', { opacity: 0, y: 14 }, { opacity: 1,    y: 0, duration: 0.6 }, 0.8)
-    .fromTo('.hero-scroll',  { opacity: 0, y: 8  }, { opacity: 1,    y: 0, duration: 0.5 }, 1.1)
-    .fromTo('.hero-ascii',   { opacity: 0, scale: 1.04 }, { opacity: 0.12, scale: 1, duration: 1.4, ease: 'power1.out' }, 1.0);
+  // Hero animation is owned by setupRibbonHero() — canvas + parallax are
+  // driven independently of GSAP ScrollTrigger.
 
-  // Scramble fires at the same time as label, runs its own animation
-  setTimeout(() => {
-    const headline = document.querySelector('.hero-headline');
-    if (headline && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      scrambleText(headline, 'AI\u2011Augmented\nEngineering');
-    } else if (headline) {
-      gsap.fromTo(headline, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.7, ease: 'power2.out' });
-    }
-  }, 250);
-
-  // ── 2. Hero parallax — 4 distinct depth planes
-  // Plane 1 (closest): hero text moves at 50% scroll speed
-  gsap.to('.hero-inner', {
-    yPercent: -50,
-    ease: 'none',
-    scrollTrigger: {
-      trigger: '#hero',
-      start: 'top top',
-      end: 'bottom top',
-      scrub: 1.5,
-    }
-  });
-
-  // Plane 2: floats move at 70% speed — faster than text, slower than glow
-  gsap.to('.hero-floats', {
-    yPercent: -70,
-    ease: 'none',
-    scrollTrigger: {
-      trigger: '#hero',
-      start: 'top top',
-      end: 'bottom top',
-      scrub: 1,
-    }
-  });
-
-  // Plane 3 (furthest): glow rockets up at 100% and fades hard
-  gsap.to('.hero-glow', {
-    yPercent: -100,
-    opacity: 0,
-    ease: 'none',
-    scrollTrigger: {
-      trigger: '#hero',
-      start: 'top top',
-      end: '50% top',
-      scrub: 0.8,
-    }
-  });
-
-  // Plane 4: hero section background gets a subtle scale — adds cinematic zoom-out
-  gsap.to('#hero', {
-    scale: 0.94,
-    ease: 'none',
-    scrollTrigger: {
-      trigger: '#hero',
-      start: 'top top',
-      end: 'bottom top',
-      scrub: 2,
-    }
-  });
-
-  // ── 2. Floating terminal snippets ─────────────────────────────
-  // Fade in staggered on page load, then drift via CSS animation
-  gsap.to('.hero-float', {
-    opacity: 0.18,           // subtle — atmosphere, not distraction
-    duration: 1.2,
-    stagger: 0.15,
-    ease: 'power1.out',
-    delay: 0.8,
-  });
-
-  // Floats also parallax upward (faster than content) as hero scrolls out
-  gsap.to('.hero-floats', {
-    yPercent: -40,
-    ease: 'none',
-    scrollTrigger: {
-      trigger: '#hero',
-      start: 'top top',
-      end: 'bottom top',
-      scrub: true,
-    }
-  });
-
-  // ── 3. About: horizontal slide + continuing parallax drift ───
+  // ── About: horizontal slide + continuing parallax drift ───
   gsap.to('.about-col:first-child', {
     opacity: 1, x: 0, duration: 0.9, ease: 'power2.out',
     scrollTrigger: { trigger: '.about-grid', start: 'top 80%' }
@@ -271,80 +456,6 @@ function configureScrollAnimations() {
 }
 
 // ─────────────────────────────────────────────────────────────────
-// TEXT SCRAMBLE
-// Safe DOM-only implementation — no innerHTML with dynamic content.
-// Each character slot is a pre-built <span> whose textContent is
-// updated each frame, so the browser never parses arbitrary HTML.
-// ─────────────────────────────────────────────────────────────────
-function scrambleText(el, finalText) {
-  const chars = '!<>_\\/[]{}=+*^?#|01';
-  const lines = finalText.split('\n');
-
-  const queue = [];
-  lines.forEach((line, lineIdx) => {
-    [...line].forEach((char, charIdx) => {
-      const delay = Math.floor(Math.random() * 18) + charIdx * 1.5;
-      queue.push({
-        to: char,
-        start: Math.floor(delay),
-        end: Math.floor(delay) + Math.floor(Math.random() * 14) + 8,
-        scrambleChar: '',
-        lineIdx,
-      });
-    });
-    if (lineIdx < lines.length - 1) {
-      queue.push({ to: '\n', start: 0, end: 0, lineIdx });
-    }
-  });
-
-  // Pre-build one DOM node per slot — textContent only, no innerHTML
-  el.textContent = '';
-  el.style.opacity = '1';
-
-  const nodes = queue.map(item => {
-    if (item.to === '\n') return document.createElement('br');
-    const span = document.createElement('span');
-    span.style.opacity = '0';
-    span.textContent = item.to;
-    return span;
-  });
-  nodes.forEach(node => el.appendChild(node));
-
-  let frame = 0;
-
-  function update() {
-    let complete = 0;
-    const realItems = queue.filter(q => q.to !== '\n');
-
-    queue.forEach((item, i) => {
-      if (item.to === '\n') return;
-      const node = nodes[i];
-      if (frame >= item.end) {
-        complete++;
-        node.className = '';
-        node.style.opacity = '1';
-        node.textContent = item.to;
-      } else if (frame >= item.start) {
-        if (!item.scrambleChar || Math.random() < 0.3) {
-          item.scrambleChar = chars[Math.floor(Math.random() * chars.length)];
-        }
-        node.className = 'scramble-char';
-        node.style.opacity = '1';
-        node.textContent = item.scrambleChar;
-      } else {
-        node.style.opacity = '0';
-        node.textContent = item.to;
-      }
-    });
-
-    if (complete < realItems.length) requestAnimationFrame(update);
-    frame++;
-  }
-
-  requestAnimationFrame(update);
-}
-
-// ─────────────────────────────────────────────────────────────────
 // CUSTOM CURSOR
 // ─────────────────────────────────────────────────────────────────
 function setupCustomCursor() {
@@ -442,27 +553,6 @@ function setup3DCardTilt() {
       card.style.setProperty('--tilt-y', '0deg');
     });
   });
-}
-
-// ─────────────────────────────────────────────────────────────────
-// NAV: Backdrop blur on scroll
-// ─────────────────────────────────────────────────────────────────
-function setupNav() {
-  const nav = document.querySelector('.nav');
-  if (!nav) return;
-
-  let ticking = false;
-
-  function updateNav() {
-    nav.classList.toggle('scrolled', window.scrollY > 10);
-    ticking = false;
-  }
-
-  window.addEventListener('scroll', () => {
-    if (!ticking) { requestAnimationFrame(updateNav); ticking = true; }
-  }, { passive: true });
-
-  updateNav();
 }
 
 // ─────────────────────────────────────────────────────────────────
