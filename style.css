@@ -684,7 +684,7 @@ p { line-height: var(--line-height-relaxed); }
   gap: var(--space-9);
 }
 
-.marquee-star { color: #ff2f00; }
+.marquee-star { color: var(--color-accent-primary); }
 
 @keyframes marqueeScroll {
   0%   { transform: translateX(0); }

@@ -120,9 +120,10 @@ function setupRibbonHero(prefersReducedMotion) {
     pixel: 3, count: 35, width: 14, length: 200, speed: 36,
     turb: 50, flow: 335, swirl: 71,
     mStr: 126, mRadius: 335, fade: 14, bgColor: '#0b0b0d',
-    hue: 23, sat: 100, bri: 150,
+    hue: 0, sat: 110, bri: 130,
   };
-  const PALETTE = ['#ff0040', '#ffffff', '#888888', '#202020']; // "noir"
+  // Blue shades matching --color-accent-primary (#3b82f6)
+  const PALETTE = ['#60a5fa', '#3b82f6', '#1d4ed8', '#1e3a8a'];
 
   const ctx = canvas.getContext('2d');
   const low = document.createElement('canvas');
