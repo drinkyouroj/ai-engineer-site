@@ -128,6 +128,11 @@ body::after {
   100% { transform: translate(0, 0); }
 }
 
+/* Adaptive render quality, level 2 (set by main.js on sustained low FPS,
+   e.g. software-rendered browsers): grain stays visible as texture but
+   stops shifting — drops a full-viewport re-composite every 80ms. */
+html.render-lite body::after { animation: none; }
+
 /* ─── Scroll Progress Bar ────────────────────────────────────────── */
 .scroll-progress {
   position: fixed;

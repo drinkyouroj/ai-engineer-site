@@ -219,6 +219,23 @@ function setupRibbonHero(prefersReducedMotion) {
     mStr: 126, mRadius: 335, fade: 14, bgColor: '#0b0b0d',
     hue: 0, sat: 110, bri: 130,
   };
+
+  // Adaptive render quality — for browsers compositing in software
+  // (graphics acceleration off, blocklisted GPUs), where the hero runs
+  // ~36fps because of composite AREA, not JS. One-way ratchet:
+  //   level 1: cap canvas dpr at 1 (4× less upscale raster work;
+  //            simulation buffer untouched, so the swirl is identical)
+  //   level 2: freeze the film grain (html.render-lite — grain stays
+  //            visible, stops re-compositing the viewport every 80ms)
+  // Trips only on SUSTAINED starvation: ADAPT.badNeeded consecutive
+  // 500ms windows under ADAPT.minFps, after a warmup that lets the
+  // load transient (RSS fetch, GSAP card injection) clear. Windows
+  // longer than ADAPT.staleMs are a hidden tab / paused rAF, not
+  // slowness — discarded. Never recovers within a session: degrading
+  // raises FPS, which would un-trip a two-way rule and oscillate.
+  const ADAPT = { minFps: 45, badNeeded: 6, warmupMs: 2000, staleMs: 1500 };
+  let adaptLevel = 0, badWindows = 0;
+  const setupAt = performance.now();
   // Blue shades matching --color-accent-primary (#3b82f6)
   const PALETTE = ['#60a5fa', '#3b82f6', '#1d4ed8', '#1e3a8a'];
 
@@ -285,17 +302,26 @@ function setupRibbonHero(prefersReducedMotion) {
     }
   }
 
+  let dprCap = 2;   // lowered to 1 by the adaptive ratchet (level 1)
+
   function resize() {
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const dpr = Math.min(window.devicePixelRatio || 1, dprCap);
     canvas.width  = Math.floor(window.innerWidth * dpr);
     canvas.height = Math.floor(window.innerHeight * dpr);
     canvas.style.width  = window.innerWidth  + 'px';
     canvas.style.height = window.innerHeight + 'px';
-    low.width  = Math.max(2, Math.floor(window.innerWidth  / C.pixel));
-    low.height = Math.max(2, Math.floor(window.innerHeight / C.pixel));
-    lctx.fillStyle = C.bgColor;
-    lctx.fillRect(0, 0, low.width, low.height);
-    resetRibbons();
+    // Only rebuild the simulation buffer when its size actually changed —
+    // assigning canvas dimensions clears content, and a dpr-only change
+    // (adaptive level 1) must not wipe trails or respawn ribbons.
+    const lw = Math.max(2, Math.floor(window.innerWidth  / C.pixel));
+    const lh = Math.max(2, Math.floor(window.innerHeight / C.pixel));
+    if (lw !== low.width || lh !== low.height) {
+      low.width  = lw;
+      low.height = lh;
+      lctx.fillStyle = C.bgColor;
+      lctx.fillRect(0, 0, low.width, low.height);
+      resetRibbons();
+    }
   }
 
   function step(now) {
@@ -412,17 +438,36 @@ function setupRibbonHero(prefersReducedMotion) {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.globalCompositeOperation = 'source-over';
 
-    // Telemetry readout at 2Hz: measured FPS, exact canvas draw ops this
-    // frame (fade + 2/ribbon + trail + upscale + scanline), buffer size.
-    if (telemetryEl) {
-      telFrames++;
-      if (now - telLast >= 500) {
-        const fps = Math.round((telFrames * 1000) / (now - telLast));
-        const drawOps = 3 + ribbons.length * 2 + trailDraws;
-        telemetryEl.textContent = `RENDER ${fps}FPS · ${drawOps} DRAWS/F · ${W}×${H}`;
-        telFrames = 0;
-        telLast = now;
+    // 500ms accounting window — feeds both the telemetry readout and the
+    // adaptive-quality ratchet (which must run even without the readout).
+    telFrames++;
+    if (now - telLast >= 500) {
+      const windowMs = now - telLast;
+      const fps = Math.round((telFrames * 1000) / windowMs);
+
+      // Adaptive ratchet: sustained sub-minFps after warmup escalates one
+      // level. Stale windows (hidden tab, paused rAF) don't count either way.
+      if (adaptLevel < 2 && windowMs < ADAPT.staleMs && now - setupAt > ADAPT.warmupMs) {
+        badWindows = fps < ADAPT.minFps ? badWindows + 1 : 0;
+        if (badWindows >= ADAPT.badNeeded) {
+          adaptLevel++;
+          badWindows = 0;
+          if (adaptLevel === 1) {
+            dprCap = 1;
+            resize();
+          } else {
+            document.documentElement.classList.add('render-lite');
+          }
+        }
       }
+
+      if (telemetryEl) {
+        const drawOps = 3 + ribbons.length * 2 + trailDraws;
+        telemetryEl.textContent =
+          `RENDER ${fps}FPS · ${drawOps} DRAWS/F · ${W}×${H}${adaptLevel ? ' · LITE' : ''}`;
+      }
+      telFrames = 0;
+      telLast = now;
     }
 
     rafId = requestAnimationFrame(step);

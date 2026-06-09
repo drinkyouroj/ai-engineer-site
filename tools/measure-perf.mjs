@@ -30,7 +30,11 @@ if (!BIN) {
   process.exit(1);
 }
 
-const URL_UNDER_TEST = 'http://localhost:3030/?debug=perf';
+// Overridable for A/B experiments, e.g. reproducing a user config:
+//   PERF_URL='https://www.justin.hearn.me/?debug=perf' \
+//   EXTRA_BROWSER_ARGS='--disable-gpu' node tools/measure-perf.mjs ...
+const URL_UNDER_TEST = process.env.PERF_URL || 'http://localhost:3030/?debug=perf';
+const EXTRA_ARGS = (process.env.EXTRA_BROWSER_ARGS || '').split(' ').filter(Boolean);
 const PORT = 9223;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const median = (a) => {
@@ -48,6 +52,7 @@ const browser = spawn(BIN, [
   '--disable-renderer-backgrounding',
   '--window-size=1440,900',
   '--window-position=40,40',
+  ...EXTRA_ARGS,
   'about:blank',
 ], { stdio: 'ignore' });
 
@@ -155,7 +160,14 @@ try {
     });
   });
 
-  console.log(JSON.stringify({ browser: LABEL, idle, throttled, scroll }, null, 2));
+  // Hero telemetry line as the page reports it (includes LITE badge when
+  // the adaptive-quality ratchet engaged during the run)
+  const { result: tel } = await cdp.send('Runtime.evaluate', {
+    expression: `(document.querySelector('.ribbon-telemetry')||{}).textContent || null`,
+    returnByValue: true,
+  });
+
+  console.log(JSON.stringify({ browser: LABEL, idle, throttled, scroll, telemetry: tel.value }, null, 2));
   cdp.close();
 } catch (err) {
   console.error(`[${LABEL}] measurement failed:`, err.message);
