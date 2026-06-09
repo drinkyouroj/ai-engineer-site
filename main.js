@@ -200,8 +200,16 @@ function setupRibbonHero(prefersReducedMotion) {
   window.addEventListener('resize', updateParallax);
   updateParallax();
 
+  // Live render telemetry — real numbers from the render loop, shown in
+  // the bottom meta strip. Decorative (aria-hidden in the markup).
+  const telemetryEl = hero.querySelector('.ribbon-telemetry');
+
   // Reduced motion: show a static background color + skip canvas rAF.
-  if (prefersReducedMotion) return;
+  // The telemetry says so honestly instead of showing stale numbers.
+  if (prefersReducedMotion) {
+    if (telemetryEl) telemetryEl.textContent = 'RENDER PAUSED · REDUCED MOTION';
+    return;
+  }
 
   // ── Canvas flow-field animation ──────────────────────────────────
   // Defaults match the reference prototype (swirling-name-hero-portfolio)
@@ -247,6 +255,7 @@ function setupRibbonHero(prefersReducedMotion) {
   let ribbons = [];
   let rafId = null;
   let last = performance.now();
+  let telFrames = 0, telLast = last;   // telemetry: frames since last readout
 
   const mouse = {
     x: -9999, y: -9999, tx: -9999, ty: -9999,
@@ -375,6 +384,7 @@ function setupRibbonHero(prefersReducedMotion) {
     }
 
     // Cursor trail (fading particles along the smoothed mouse path)
+    let trailDraws = 0;
     if (mouse.inside && mouse.x > -1000) {
       mouse.trail.push({ x: mouse.x, y: mouse.y, life: 1 });
       if (mouse.trail.length > 40) mouse.trail.shift();
@@ -387,6 +397,7 @@ function setupRibbonHero(prefersReducedMotion) {
         lctx.fillStyle = `rgba(${TRAIL_RGB[i % TRAIL_RGB.length]},${p.life})`;
         lctx.arc(p.x, p.y, rad, 0, Math.PI * 2);
         lctx.fill();
+        trailDraws++;
       }
       mouse.trail = mouse.trail.filter(p => p.life > 0);
     }
@@ -400,6 +411,19 @@ function setupRibbonHero(prefersReducedMotion) {
     ctx.fillStyle = scanPattern;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.globalCompositeOperation = 'source-over';
+
+    // Telemetry readout at 2Hz: measured FPS, exact canvas draw ops this
+    // frame (fade + 2/ribbon + trail + upscale + scanline), buffer size.
+    if (telemetryEl) {
+      telFrames++;
+      if (now - telLast >= 500) {
+        const fps = Math.round((telFrames * 1000) / (now - telLast));
+        const drawOps = 3 + ribbons.length * 2 + trailDraws;
+        telemetryEl.textContent = `RENDER ${fps}FPS · ${drawOps} DRAWS/F · ${W}×${H}`;
+        telFrames = 0;
+        telLast = now;
+      }
+    }
 
     rafId = requestAnimationFrame(step);
   }

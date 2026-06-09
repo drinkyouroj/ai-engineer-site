@@ -537,6 +537,10 @@ p { line-height: var(--line-height-relaxed); }
 
 .ribbon-meta-sub { opacity: 0.6; }
 
+/* Live render telemetry — real numbers from the canvas loop (main.js).
+   Tabular numerals so the line doesn't jitter as values update. */
+.ribbon-telemetry { font-variant-numeric: tabular-nums; }
+
 .ribbon-live-dot {
   display: inline-block;
   width: 7px; height: 7px;
