@@ -499,7 +499,10 @@ p { line-height: var(--line-height-relaxed); }
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: #fff;
-  mix-blend-mode: difference;
+  /* Was mix-blend-mode: difference — that forced the compositor to
+     re-blend these strips against the canvas on every animation frame.
+     A drop shadow keeps text legible when ribbons pass underneath. */
+  text-shadow: var(--shadow-text);
   z-index: 10;
   display: flex;
   justify-content: space-between;
@@ -562,7 +565,7 @@ p { line-height: var(--line-height-relaxed); }
   font-family: var(--font-family-mono);
   font-size: 12px;
   color: #fff;
-  mix-blend-mode: difference;
+  text-shadow: var(--shadow-text);
   animation: ribbonBounce 1.8s ease-in-out infinite;
 }
 
