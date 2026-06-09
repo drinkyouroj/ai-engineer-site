@@ -11,8 +11,9 @@
  * http://localhost:3030 with the ?debug=perf overlay available.
  *
  * Phases:
- *   1. idle   — hero on screen, no input, 8s of samples
- *   2. scroll — synthetic wheel events down the page, 6s of samples
+ *   1. idle          — hero on screen, no input, 8s of samples
+ *   2. idle-throttled — same, with 6× CPU throttle (simulates mid-range laptop)
+ *   3. scroll        — synthetic wheel events down the page, 6s of samples
  *
  * Reports median FPS, median draws/frame, and worst frame time per phase.
  */
@@ -22,7 +23,8 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-const [, , BIN, LABEL = 'browser'] = process.argv;
+const [, , BIN, LABEL = 'browser', THROTTLE_ARG] = process.argv;
+const THROTTLE = Number(THROTTLE_ARG) || 6;
 if (!BIN) {
   console.error('usage: measure-perf.mjs <browser-binary> [label]');
   process.exit(1);
@@ -94,7 +96,7 @@ async function readStats(cdp) {
 }
 
 async function samplePhase(cdp, name, durationMs, everyMs, onTick) {
-  const fps = [], draws = [], worst = [];
+  const fps = [], draws = [], worst = [], script = [];
   const t0 = Date.now();
   while (Date.now() - t0 < durationMs) {
     if (onTick) await onTick();
@@ -104,6 +106,7 @@ async function samplePhase(cdp, name, durationMs, everyMs, onTick) {
       fps.push(s.fps);
       draws.push(s.draws);
       worst.push(s.worstMs);
+      script.push(s.scriptMs || 0);
     }
   }
   return {
@@ -111,6 +114,7 @@ async function samplePhase(cdp, name, durationMs, everyMs, onTick) {
     medianFps: +median(fps).toFixed(1),
     minFps: +Math.min(...fps).toFixed(1),
     medianDraws: Math.round(median(draws)),
+    medianScriptMs: +median(script).toFixed(2),
     worstFrameMs: +Math.max(...worst).toFixed(1),
     samples: fps.length,
   };
@@ -133,6 +137,14 @@ try {
 
   const idle = await samplePhase(cdp, 'hero-idle', 8000, 250);
 
+  // Same scene with the CPU slowed 6× — models the mid-range hardware where
+  // the per-draw-call tax (Brave farbling hooks every canvas op) becomes jank
+  await cdp.send('Emulation.setCPUThrottlingRate', { rate: THROTTLE });
+  await sleep(1000);
+  const throttled = await samplePhase(cdp, `hero-idle-${THROTTLE}x-throttle`, 8000, 250);
+  await cdp.send('Emulation.setCPUThrottlingRate', { rate: 1 });
+  await sleep(1000);
+
   // Synthetic wheel scroll — real compositor scroll, like a user flicking down
   let wheels = 0;
   const scroll = await samplePhase(cdp, 'scroll', 6000, 50, async () => {
@@ -143,7 +155,7 @@ try {
     });
   });
 
-  console.log(JSON.stringify({ browser: LABEL, idle, scroll }, null, 2));
+  console.log(JSON.stringify({ browser: LABEL, idle, throttled, scroll }, null, 2));
   cdp.close();
 } catch (err) {
   console.error(`[${LABEL}] measurement failed:`, err.message);

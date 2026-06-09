@@ -71,37 +71,52 @@ function setupPerfOverlay() {
     proto[name] = function () { draws++; return orig.apply(this, arguments); };
   });
 
+  // Time spent inside rAF callbacks per frame (the render loop's true main-
+  // thread cost — visible even when vsync pins FPS at 60). Debug-mode only.
+  let scriptMs = 0;
+  const origRaf = window.requestAnimationFrame.bind(window);
+  window.requestAnimationFrame = (cb) => origRaf((ts) => {
+    const t0 = performance.now();
+    cb(ts);
+    scriptMs += performance.now() - t0;
+  });
+
   const el = document.createElement('div');
   el.className = 'perf-overlay';
   el.setAttribute('aria-hidden', 'true');
   document.body.appendChild(el);
 
   const SAMPLE = 60;                       // rolling ~1s window at 60fps
-  const deltas = new Float32Array(SAMPLE);
+  const deltas  = new Float32Array(SAMPLE);
+  const scripts = new Float32Array(SAMPLE);
   let idx = 0, filled = 0;
   let prev = performance.now();
-  let prevDraws = 0, lastText = 0;
+  let prevDraws = 0, prevScript = 0, lastText = 0;
 
   // Exposed for automated measurement (CDP harness reads this object)
-  const stats = { fps: 0, frameMs: 0, worstMs: 0, draws: 0 };
+  const stats = { fps: 0, frameMs: 0, worstMs: 0, draws: 0, scriptMs: 0 };
   window.__perfStats = stats;
 
   function tick(now) {
-    deltas[idx] = now - prev;
+    deltas[idx]  = now - prev;
+    scripts[idx] = scriptMs - prevScript;  // rAF-callback time this frame
     prev = now;
+    prevScript = scriptMs;
     idx = (idx + 1) % SAMPLE;
     if (filled < SAMPLE) filled++;
 
-    let sum = 0, worst = 0;
+    let sum = 0, worst = 0, scriptSum = 0;
     for (let i = 0; i < filled; i++) {
       sum += deltas[i];
+      scriptSum += scripts[i];
       if (deltas[i] > worst) worst = deltas[i];
     }
     const avg = sum / filled;
-    stats.fps     = 1000 / avg;
-    stats.frameMs = avg;
-    stats.worstMs = worst;
-    stats.draws   = draws - prevDraws;     // canvas ops since previous frame
+    stats.fps      = 1000 / avg;
+    stats.frameMs  = avg;
+    stats.worstMs  = worst;
+    stats.scriptMs = scriptSum / filled;
+    stats.draws    = draws - prevDraws;    // canvas ops since previous frame
     prevDraws = draws;
 
     // Repaint the readout at ~5Hz so the overlay itself stays cheap
@@ -111,6 +126,7 @@ function setupPerfOverlay() {
         `${stats.fps.toFixed(1).padStart(5)} fps\n` +
         `${stats.frameMs.toFixed(2).padStart(6)} ms avg\n` +
         `${stats.worstMs.toFixed(2).padStart(6)} ms worst\n` +
+        `${stats.scriptMs.toFixed(2).padStart(6)} ms raf-js\n` +
         `${String(stats.draws).padStart(4)} draws/frame`;
     }
     requestAnimationFrame(tick);
