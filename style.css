@@ -245,9 +245,12 @@ p { line-height: var(--line-height-relaxed); }
   top: 0;
   z-index: 100;
   height: var(--nav-height);
+  /* No backdrop-filter here: a sticky element's backdrop blur is
+     re-sampled on every scroll frame (the scroll-stutter suspect,
+     and a property Brave treats less kindly than Chrome). The nav bg
+     token is opaque enough that frosted glass isn't missed on a
+     dark-on-dark site. */
   background: var(--color-nav-bg);
-  -webkit-backdrop-filter: blur(12px) saturate(180%);
-  backdrop-filter: blur(12px) saturate(180%);
   border-bottom: 1px solid var(--color-border-primary);
 }
 

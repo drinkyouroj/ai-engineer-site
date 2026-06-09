@@ -41,7 +41,7 @@
 
   /* Color: Overlays */
   --color-surface-overlay:  rgba(0, 0, 0, 0.8);  /* Mobile nav backdrop */
-  --color-nav-bg:           rgba(10, 10, 10, 0.85); /* Sticky nav backdrop */
+  --color-nav-bg:           rgba(10, 10, 10, 0.92); /* Sticky nav backdrop — opaque enough to read without backdrop blur */
 
   /* ─── Typography ─────────────────────────────────────────── */
   --font-family-display: 'JetBrains Mono', 'Courier New', monospace;
