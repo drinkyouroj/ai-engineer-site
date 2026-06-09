@@ -103,9 +103,13 @@ body.cursor-clicking .cursor-ring {
 body::after {
   content: '';
   position: fixed;
-  inset: -50%;          /* oversized so the shifting animation never shows an edge */
-  width: 200%;
-  height: 200%;
+  /* Slightly oversized so the shifting animation never shows an edge.
+     Was 200%×200% (4× the viewport composited every grain step) — the
+     keyframes only translate ±5%, so a small bleed covers the same
+     visual at a quarter of the texture memory and composite area. */
+  inset: calc(-1 * var(--grain-bleed));
+  width: calc(100% + 2 * var(--grain-bleed));
+  height: calc(100% + 2 * var(--grain-bleed));
   pointer-events: none;
   z-index: 9000;
   opacity: 0.045;

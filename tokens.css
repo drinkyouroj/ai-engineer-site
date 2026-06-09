@@ -108,6 +108,11 @@
   --shadow-focus: 0 0 0 3px rgba(59, 130, 246, 0.4);  /* Focus ring */
   --shadow-text:  0 1px 3px rgba(0, 0, 0, 0.7);       /* Text legibility over canvas */
 
+  /* ─── Effects ────────────────────────────────────────────── */
+  /* Film grain overlay overshoot. Must exceed the largest translate in
+     the grainShift keyframes (±5% of the layer) so edges never show. */
+  --grain-bleed: 6%;
+
   /* ─── Motion ─────────────────────────────────────────────── */
   --duration-instant: 50ms;
   --duration-fast:    150ms;
