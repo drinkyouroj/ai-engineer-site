@@ -160,7 +160,14 @@ try {
     });
   });
 
-  console.log(JSON.stringify({ browser: LABEL, idle, throttled, scroll }, null, 2));
+  // Hero telemetry line as the page reports it (includes LITE badge when
+  // the adaptive-quality ratchet engaged during the run)
+  const { result: tel } = await cdp.send('Runtime.evaluate', {
+    expression: `(document.querySelector('.ribbon-telemetry')||{}).textContent || null`,
+    returnByValue: true,
+  });
+
+  console.log(JSON.stringify({ browser: LABEL, idle, throttled, scroll, telemetry: tel.value }, null, 2));
   cdp.close();
 } catch (err) {
   console.error(`[${LABEL}] measurement failed:`, err.message);
