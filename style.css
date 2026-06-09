@@ -73,6 +73,25 @@ body.cursor-clicking .cursor-ring {
   .cursor { display: none !important; }
 }
 
+/* ─── Dev Perf Overlay ───────────────────────────────────────────── */
+/* Injected by setupPerfOverlay() in main.js — only with ?debug=perf */
+.perf-overlay {
+  position: fixed;
+  bottom: var(--space-4);
+  left: var(--space-4);
+  z-index: 9999;
+  font-family: var(--font-family-mono);
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-snug);
+  color: var(--color-status-success);
+  background: var(--color-surface-overlay);
+  border: 1px solid var(--color-border-secondary);
+  border-radius: var(--border-radius-md);
+  padding: var(--space-2) var(--space-3);
+  pointer-events: none;
+  white-space: pre;
+}
+
 /* ─── Scramble effect chars ──────────────────────────────────────── */
 .scramble-char {
   color: var(--color-accent-primary);
@@ -84,9 +103,13 @@ body.cursor-clicking .cursor-ring {
 body::after {
   content: '';
   position: fixed;
-  inset: -50%;          /* oversized so the shifting animation never shows an edge */
-  width: 200%;
-  height: 200%;
+  /* Slightly oversized so the shifting animation never shows an edge.
+     Was 200%×200% (4× the viewport composited every grain step) — the
+     keyframes only translate ±5%, so a small bleed covers the same
+     visual at a quarter of the texture memory and composite area. */
+  inset: calc(-1 * var(--grain-bleed));
+  width: calc(100% + 2 * var(--grain-bleed));
+  height: calc(100% + 2 * var(--grain-bleed));
   pointer-events: none;
   z-index: 9000;
   opacity: 0.045;
@@ -226,9 +249,12 @@ p { line-height: var(--line-height-relaxed); }
   top: 0;
   z-index: 100;
   height: var(--nav-height);
+  /* No backdrop-filter here: a sticky element's backdrop blur is
+     re-sampled on every scroll frame (the scroll-stutter suspect,
+     and a property Brave treats less kindly than Chrome). The nav bg
+     token is opaque enough that frosted glass isn't missed on a
+     dark-on-dark site. */
   background: var(--color-nav-bg);
-  -webkit-backdrop-filter: blur(12px) saturate(180%);
-  backdrop-filter: blur(12px) saturate(180%);
   border-bottom: 1px solid var(--color-border-primary);
 }
 
@@ -480,7 +506,10 @@ p { line-height: var(--line-height-relaxed); }
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: #fff;
-  mix-blend-mode: difference;
+  /* Was mix-blend-mode: difference — that forced the compositor to
+     re-blend these strips against the canvas on every animation frame.
+     A drop shadow keeps text legible when ribbons pass underneath. */
+  text-shadow: var(--shadow-text);
   z-index: 10;
   display: flex;
   justify-content: space-between;
@@ -507,6 +536,10 @@ p { line-height: var(--line-height-relaxed); }
 .ribbon-meta-right { text-align: right; }
 
 .ribbon-meta-sub { opacity: 0.6; }
+
+/* Live render telemetry — real numbers from the canvas loop (main.js).
+   Tabular numerals so the line doesn't jitter as values update. */
+.ribbon-telemetry { font-variant-numeric: tabular-nums; }
 
 .ribbon-live-dot {
   display: inline-block;
@@ -543,7 +576,7 @@ p { line-height: var(--line-height-relaxed); }
   font-family: var(--font-family-mono);
   font-size: 12px;
   color: #fff;
-  mix-blend-mode: difference;
+  text-shadow: var(--shadow-text);
   animation: ribbonBounce 1.8s ease-in-out infinite;
 }
 

@@ -41,7 +41,7 @@
 
   /* Color: Overlays */
   --color-surface-overlay:  rgba(0, 0, 0, 0.8);  /* Mobile nav backdrop */
-  --color-nav-bg:           rgba(10, 10, 10, 0.85); /* Sticky nav backdrop */
+  --color-nav-bg:           rgba(10, 10, 10, 0.92); /* Sticky nav backdrop — opaque enough to read without backdrop blur */
 
   /* ─── Typography ─────────────────────────────────────────── */
   --font-family-display: 'JetBrains Mono', 'Courier New', monospace;
@@ -106,6 +106,12 @@
   --shadow-lg:    0 8px 32px rgba(0, 0, 0, 0.7);
   --shadow-glow:  0 0 24px rgba(59, 130, 246, 0.2);   /* Accent glow for cards */
   --shadow-focus: 0 0 0 3px rgba(59, 130, 246, 0.4);  /* Focus ring */
+  --shadow-text:  0 1px 3px rgba(0, 0, 0, 0.7);       /* Text legibility over canvas */
+
+  /* ─── Effects ────────────────────────────────────────────── */
+  /* Film grain overlay overshoot. Must exceed the largest translate in
+     the grainShift keyframes (±5% of the layer) so edges never show. */
+  --grain-bleed: 6%;
 
   /* ─── Motion ─────────────────────────────────────────────── */
   --duration-instant: 50ms;

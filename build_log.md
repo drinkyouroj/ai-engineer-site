@@ -4,6 +4,29 @@ Append-only. One entry per session that makes meaningful changes.
 
 ---
 
+## 2026-06-09 — Brave perf fixes + live render telemetry
+
+### Done
+- Built a dev-only perf harness: `?debug=perf` overlay (rolling FPS, avg/worst frame time, rAF-callback ms, canvas draws/frame via debug-only prototype patches) + `tools/measure-perf.mjs` (CDP driver, Node ≥22) with idle / CPU-throttled / synthetic-scroll phases for apples-to-apples Chrome-vs-Brave numbers
+- Profiled before changing anything. Key baseline: at 20× CPU throttle Chrome and Brave spend identical rAF JS (~2.5 ms/frame) but **Brave drops vsyncs (33.2 ms worst frame) where Chrome doesn't** — Brave's tax is per canvas op, so draw-call count is the lever
+- `main.js`: scanline overlay (static pattern redrawn as ~270–300 `fillRect`s/frame under `multiply`) → pre-rendered 1×scanStep tile filled once as a repeating `CanvasPattern`; `adjustColor(hexToRgb(...))` (~75 constant-input HSL round-trips/frame) → computed once at setup
+- `style.css`/`tokens.css`: dropped `mix-blend-mode: difference` on `.ribbon-meta`/`.ribbon-scroll-hint` (new `--shadow-text` token for legibility); dropped sticky-nav `backdrop-filter` (nav bg alpha 0.85→0.92); shrank film-grain layer 200%→112% of viewport (new `--grain-bleed: 6%` token, documented against the ±5% keyframe amplitude)
+- After: draws/frame 343→73 (Chrome, −79%) / 209→73 (Brave, −65%); throttled rAF JS −38%/−43%; **Brave holds every vsync at the stress level where it previously dropped frames**; Chrome unregressed (60fps all phases)
+- Visible upgrade (AAP option B): live render telemetry line in the hero's bottom meta strip — real loop numbers at 2Hz (`RENDER 60FPS · 73 DRAWS/F · 480×270`), `aria-hidden`, tabular numerals; under `prefers-reduced-motion` reads `RENDER PAUSED · REDUCED MOTION` (CDP-verified)
+- DECISION doc: `docs/decisions/2026-06-09-brave-perf-and-render-telemetry.md` (full AAP + before/after tables)
+
+### Decisions
+- **Scanline pattern is *perceptually* identical, not byte-identical** — `getImageData` equivalence test shows max per-channel delta 1/255 on 1.3% of pixels (Skia pattern-shader vs direct-fill rounding floor). Disclosed rather than rounded up to "pixel-identical"
+- **Two look changes accepted and isolated in their own commits** for cheap revert: meta text no longer color-inverts over ribbons; nav loses frosted blur (dark-blur-over-dark was barely perceptible)
+- **Measured vs reasoned kept separate**: draw calls / rAF ms / dropped frames are measured; compositor wins (blend, backdrop-filter, grain) are reasoned from Chromium rendering behavior — CPU throttle can't capture GPU-side cost
+- **Telemetry over scroll-reactive swirl or wordmark flow-obstacle**: only candidate always visible, structurally on-brand (observability), and zero-cost; the perf win itself becomes the visible feature
+
+### Next
+- `character.png` optimization still outstanding (4.8 MB)
+- If real-Brave field reports still show jank: test with Shields set to Aggressive (farbling level affects canvas differently than the default Standard)
+
+---
+
 ## 2026-04-21 — Ribbon hero + sticky nav below marquee
 
 ### Done

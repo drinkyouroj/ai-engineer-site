@@ -19,6 +19,7 @@ window.addEventListener('load', init);
 function init() {
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  setupPerfOverlay(); // dev-only — no-op unless ?debug=perf or localStorage flag
   setupRibbonHero(prefersReducedMotion);
   setupScrollProgress();
   setupActiveNavTracking();
@@ -43,6 +44,94 @@ function init() {
       el.style.transform = 'none';
     });
   }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// DEV PERF OVERLAY — rolling FPS / frame time / canvas draws per frame
+// Gated: ?debug=perf in the URL, or localStorage.setItem('perfDebug','1').
+// Normal visitors never reach the instrumentation below this guard.
+// ─────────────────────────────────────────────────────────────────
+function setupPerfOverlay() {
+  let enabled = false;
+  try {
+    enabled = new URLSearchParams(location.search).get('debug') === 'perf'
+           || localStorage.getItem('perfDebug') === '1';
+  } catch (_) { /* localStorage may be blocked — overlay stays off */ }
+  if (!enabled) return;
+
+  // Count canvas 2D draw ops by patching the prototype. Method lookups
+  // resolve at call time, so this instruments every 2D context on the
+  // page (low-res buffer + visible canvas) with no render-loop changes.
+  let draws = 0;
+  const proto = CanvasRenderingContext2D.prototype;
+  ['fillRect', 'strokeRect', 'clearRect', 'fill', 'stroke',
+   'drawImage', 'fillText', 'strokeText', 'putImageData'].forEach(name => {
+    const orig = proto[name];
+    if (!orig) return;
+    proto[name] = function () { draws++; return orig.apply(this, arguments); };
+  });
+
+  // Time spent inside rAF callbacks per frame (the render loop's true main-
+  // thread cost — visible even when vsync pins FPS at 60). Debug-mode only.
+  let scriptMs = 0;
+  const origRaf = window.requestAnimationFrame.bind(window);
+  window.requestAnimationFrame = (cb) => origRaf((ts) => {
+    const t0 = performance.now();
+    cb(ts);
+    scriptMs += performance.now() - t0;
+  });
+
+  const el = document.createElement('div');
+  el.className = 'perf-overlay';
+  el.setAttribute('aria-hidden', 'true');
+  document.body.appendChild(el);
+
+  const SAMPLE = 60;                       // rolling ~1s window at 60fps
+  const deltas  = new Float32Array(SAMPLE);
+  const scripts = new Float32Array(SAMPLE);
+  let idx = 0, filled = 0;
+  let prev = performance.now();
+  let prevDraws = 0, prevScript = 0, lastText = 0;
+
+  // Exposed for automated measurement (CDP harness reads this object)
+  const stats = { fps: 0, frameMs: 0, worstMs: 0, draws: 0, scriptMs: 0 };
+  window.__perfStats = stats;
+
+  function tick(now) {
+    deltas[idx]  = now - prev;
+    scripts[idx] = scriptMs - prevScript;  // rAF-callback time this frame
+    prev = now;
+    prevScript = scriptMs;
+    idx = (idx + 1) % SAMPLE;
+    if (filled < SAMPLE) filled++;
+
+    let sum = 0, worst = 0, scriptSum = 0;
+    for (let i = 0; i < filled; i++) {
+      sum += deltas[i];
+      scriptSum += scripts[i];
+      if (deltas[i] > worst) worst = deltas[i];
+    }
+    const avg = sum / filled;
+    stats.fps      = 1000 / avg;
+    stats.frameMs  = avg;
+    stats.worstMs  = worst;
+    stats.scriptMs = scriptSum / filled;
+    stats.draws    = draws - prevDraws;    // canvas ops since previous frame
+    prevDraws = draws;
+
+    // Repaint the readout at ~5Hz so the overlay itself stays cheap
+    if (now - lastText > 200) {
+      lastText = now;
+      el.textContent =
+        `${stats.fps.toFixed(1).padStart(5)} fps\n` +
+        `${stats.frameMs.toFixed(2).padStart(6)} ms avg\n` +
+        `${stats.worstMs.toFixed(2).padStart(6)} ms worst\n` +
+        `${stats.scriptMs.toFixed(2).padStart(6)} ms raf-js\n` +
+        `${String(stats.draws).padStart(4)} draws/frame`;
+    }
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -111,8 +200,16 @@ function setupRibbonHero(prefersReducedMotion) {
   window.addEventListener('resize', updateParallax);
   updateParallax();
 
+  // Live render telemetry — real numbers from the render loop, shown in
+  // the bottom meta strip. Decorative (aria-hidden in the markup).
+  const telemetryEl = hero.querySelector('.ribbon-telemetry');
+
   // Reduced motion: show a static background color + skip canvas rAF.
-  if (prefersReducedMotion) return;
+  // The telemetry says so honestly instead of showing stale numbers.
+  if (prefersReducedMotion) {
+    if (telemetryEl) telemetryEl.textContent = 'RENDER PAUSED · REDUCED MOTION';
+    return;
+  }
 
   // ── Canvas flow-field animation ──────────────────────────────────
   // Defaults match the reference prototype (swirling-name-hero-portfolio)
@@ -130,9 +227,35 @@ function setupRibbonHero(prefersReducedMotion) {
   const lctx = low.getContext('2d');
   const noise2 = makeValueNoise(42);
 
+  // Palette + adjustment config are constants, so the HSL round-trip in
+  // adjustColor() has exactly PALETTE.length distinct results. Compute them
+  // once instead of 35×/frame (ribbons) + 40×/frame (cursor trail).
+  // RIBBON_RGB  → 'rgb(r,g,b)' for ribbon fill/stroke
+  // TRAIL_RGB   → 'r,g,b' prefix for the trail's per-particle alpha
+  const RIBBON_RGB = PALETTE.map(hex => {
+    const [r, g, b] = adjustColor(hexToRgb(hex), C);
+    return `rgb(${r},${g},${b})`;
+  });
+  const TRAIL_RGB = PALETTE.map(hex => adjustColor(hexToRgb(hex), C).join(','));
+
+  // Scanlines never change: pre-render one 1×scanStep tile and fill the
+  // whole canvas with it as a repeating pattern — 1 draw call per frame
+  // instead of canvas.height / scanStep (~300) fillRects. This is the big
+  // Brave win: Brave's fingerprint defenses hook canvas ops per call, so
+  // its per-frame tax scales with draw-call count, not painted pixels.
+  const scanStep = Math.max(2, C.pixel * 2);
+  const scanTile = document.createElement('canvas');
+  scanTile.width = 1;
+  scanTile.height = scanStep;
+  const scanCtx = scanTile.getContext('2d');
+  scanCtx.fillStyle = 'rgba(0,0,0,0.35)';
+  scanCtx.fillRect(0, 0, 1, Math.floor(scanStep / 2));
+  const scanPattern = ctx.createPattern(scanTile, 'repeat');
+
   let ribbons = [];
   let rafId = null;
   let last = performance.now();
+  let telFrames = 0, telLast = last;   // telemetry: frames since last readout
 
   const mouse = {
     x: -9999, y: -9999, tx: -9999, ty: -9999,
@@ -233,14 +356,14 @@ function setupRibbonHero(prefersReducedMotion) {
 
       const nextX = r.x + vx * speed * dt * 60;
       const nextY = r.y + vy * speed * dt * 60;
-      const rgb = adjustColor(hexToRgb(PALETTE[r.colorIdx]), C);
+      const rgb = RIBBON_RGB[r.colorIdx];
       const radius = Math.max(0.5, r.w / (C.pixel < 3 ? 4 : 6));
 
       lctx.beginPath();
-      lctx.fillStyle = `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
+      lctx.fillStyle = rgb;
       lctx.arc(r.x, r.y, radius, 0, Math.PI * 2);
       lctx.fill();
-      lctx.strokeStyle = `rgb(${rgb[0]},${rgb[1]},${rgb[2]})`;
+      lctx.strokeStyle = rgb;
       lctx.lineWidth = radius * 2;
       lctx.lineCap = 'round';
       lctx.beginPath();
@@ -261,6 +384,7 @@ function setupRibbonHero(prefersReducedMotion) {
     }
 
     // Cursor trail (fading particles along the smoothed mouse path)
+    let trailDraws = 0;
     if (mouse.inside && mouse.x > -1000) {
       mouse.trail.push({ x: mouse.x, y: mouse.y, life: 1 });
       if (mouse.trail.length > 40) mouse.trail.shift();
@@ -268,12 +392,12 @@ function setupRibbonHero(prefersReducedMotion) {
         const p = mouse.trail[i];
         p.life -= 0.035;
         if (p.life <= 0) continue;
-        const rgb = adjustColor(hexToRgb(PALETTE[i % PALETTE.length]), C);
         const rad = Math.max(0.8, (C.width / Math.max(1, C.pixel)) * p.life * 0.9);
         lctx.beginPath();
-        lctx.fillStyle = `rgba(${rgb[0]},${rgb[1]},${rgb[2]},${p.life})`;
+        lctx.fillStyle = `rgba(${TRAIL_RGB[i % TRAIL_RGB.length]},${p.life})`;
         lctx.arc(p.x, p.y, rad, 0, Math.PI * 2);
         lctx.fill();
+        trailDraws++;
       }
       mouse.trail = mouse.trail.filter(p => p.life > 0);
     }
@@ -282,14 +406,24 @@ function setupRibbonHero(prefersReducedMotion) {
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(low, 0, 0, canvas.width, canvas.height);
 
-    // Scanlines overlay
+    // Scanlines overlay — one pattern fill (pre-rendered tile, see setup)
     ctx.globalCompositeOperation = 'multiply';
-    const scanStep = Math.max(2, C.pixel * 2);
-    ctx.fillStyle = 'rgba(0,0,0,0.35)';
-    for (let y = 0; y < canvas.height; y += scanStep) {
-      ctx.fillRect(0, y, canvas.width, Math.floor(scanStep / 2));
-    }
+    ctx.fillStyle = scanPattern;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.globalCompositeOperation = 'source-over';
+
+    // Telemetry readout at 2Hz: measured FPS, exact canvas draw ops this
+    // frame (fade + 2/ribbon + trail + upscale + scanline), buffer size.
+    if (telemetryEl) {
+      telFrames++;
+      if (now - telLast >= 500) {
+        const fps = Math.round((telFrames * 1000) / (now - telLast));
+        const drawOps = 3 + ribbons.length * 2 + trailDraws;
+        telemetryEl.textContent = `RENDER ${fps}FPS · ${drawOps} DRAWS/F · ${W}×${H}`;
+        telFrames = 0;
+        telLast = now;
+      }
+    }
 
     rafId = requestAnimationFrame(step);
   }
