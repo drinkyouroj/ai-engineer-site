@@ -19,6 +19,7 @@ window.addEventListener('load', init);
 function init() {
   const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+  setupPerfOverlay(); // dev-only — no-op unless ?debug=perf or localStorage flag
   setupRibbonHero(prefersReducedMotion);
   setupScrollProgress();
   setupActiveNavTracking();
@@ -43,6 +44,78 @@ function init() {
       el.style.transform = 'none';
     });
   }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// DEV PERF OVERLAY — rolling FPS / frame time / canvas draws per frame
+// Gated: ?debug=perf in the URL, or localStorage.setItem('perfDebug','1').
+// Normal visitors never reach the instrumentation below this guard.
+// ─────────────────────────────────────────────────────────────────
+function setupPerfOverlay() {
+  let enabled = false;
+  try {
+    enabled = new URLSearchParams(location.search).get('debug') === 'perf'
+           || localStorage.getItem('perfDebug') === '1';
+  } catch (_) { /* localStorage may be blocked — overlay stays off */ }
+  if (!enabled) return;
+
+  // Count canvas 2D draw ops by patching the prototype. Method lookups
+  // resolve at call time, so this instruments every 2D context on the
+  // page (low-res buffer + visible canvas) with no render-loop changes.
+  let draws = 0;
+  const proto = CanvasRenderingContext2D.prototype;
+  ['fillRect', 'strokeRect', 'clearRect', 'fill', 'stroke',
+   'drawImage', 'fillText', 'strokeText', 'putImageData'].forEach(name => {
+    const orig = proto[name];
+    if (!orig) return;
+    proto[name] = function () { draws++; return orig.apply(this, arguments); };
+  });
+
+  const el = document.createElement('div');
+  el.className = 'perf-overlay';
+  el.setAttribute('aria-hidden', 'true');
+  document.body.appendChild(el);
+
+  const SAMPLE = 60;                       // rolling ~1s window at 60fps
+  const deltas = new Float32Array(SAMPLE);
+  let idx = 0, filled = 0;
+  let prev = performance.now();
+  let prevDraws = 0, lastText = 0;
+
+  // Exposed for automated measurement (CDP harness reads this object)
+  const stats = { fps: 0, frameMs: 0, worstMs: 0, draws: 0 };
+  window.__perfStats = stats;
+
+  function tick(now) {
+    deltas[idx] = now - prev;
+    prev = now;
+    idx = (idx + 1) % SAMPLE;
+    if (filled < SAMPLE) filled++;
+
+    let sum = 0, worst = 0;
+    for (let i = 0; i < filled; i++) {
+      sum += deltas[i];
+      if (deltas[i] > worst) worst = deltas[i];
+    }
+    const avg = sum / filled;
+    stats.fps     = 1000 / avg;
+    stats.frameMs = avg;
+    stats.worstMs = worst;
+    stats.draws   = draws - prevDraws;     // canvas ops since previous frame
+    prevDraws = draws;
+
+    // Repaint the readout at ~5Hz so the overlay itself stays cheap
+    if (now - lastText > 200) {
+      lastText = now;
+      el.textContent =
+        `${stats.fps.toFixed(1).padStart(5)} fps\n` +
+        `${stats.frameMs.toFixed(2).padStart(6)} ms avg\n` +
+        `${stats.worstMs.toFixed(2).padStart(6)} ms worst\n` +
+        `${String(stats.draws).padStart(4)} draws/frame`;
+    }
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
 }
 
 // ─────────────────────────────────────────────────────────────────
