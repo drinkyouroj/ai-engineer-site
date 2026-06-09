@@ -4,6 +4,27 @@ Append-only. One entry per session that makes meaningful changes.
 
 ---
 
+## 2026-06-09 (later) — Real root cause + adaptive render quality
+
+### Done
+- Field report: perf still bad in the user's Brave after PR #7, with shields and extensions ruled out. Systematic debugging found the actual root cause on that machine: **graphics acceleration disabled in the Brave profile** (`hardware_acceleration_mode: {enabled:false}` in Local State; running GPU process showed `--use-gl=disabled`; Chrome's setting absent = enabled, hence the Chrome/Brave gap)
+- Reproduced mechanically on the live site (fresh profile, dpr 2, maximized): GPU off = 36fps hero / 33fps scroll (rAF JS only 0.22ms — composite area is the bottleneck); GPU on, same window = 60fps. User-side fix: re-enable "Use graphics acceleration when available" in brave://settings/system
+- Harness: `PERF_URL` + `EXTRA_BROWSER_ARGS` env overrides in `tools/measure-perf.mjs` (how the A/B above was run); output now includes the page's telemetry line
+- Shipped **adaptive render quality** (AAP'd) for software-rendered visitors: one-way ratchet in the hero loop — 6 consecutive 500ms windows under 45fps (after 2s warmup, stale windows discarded) → level 1 caps canvas dpr at 1 (simulation buffer untouched), level 2 freezes film grain (`html.render-lite`). Telemetry gains a `LITE` badge. `resize()` now preserves the simulation buffer on dpr-only changes
+- Merge gates passed: GPU-off run converges to 60fps idle + scroll (from 33–36) with `LITE` badge; GPU-on control never trips (a one-off 267ms network spike correctly ignored)
+- DECISION doc: `docs/decisions/2026-06-09-adaptive-render-quality.md`
+
+### Decisions
+- **Adaptive (react to measured FPS) over static detection** — WebGL-renderer probing is fingerprinting-adjacent and punishes capable machines matching the heuristic; the symptom itself is the reliable signal
+- **One-way ratchet, no recovery** — degrading raises FPS, which would un-trip a two-way rule and oscillate; reload resets
+- **Conditional fidelity loss doesn't violate the perf PR's "pixel-identical" bar** — that bar governed unconditional changes; degraded mode only exists where the alternative is ~33fps, and is badged in the telemetry
+
+### Next
+- `character.png` optimization still outstanding (4.8 MB)
+- If field reports show spurious `LITE` on capable hardware, tune `ADAPT` in `main.js`
+
+---
+
 ## 2026-06-09 — Brave perf fixes + live render telemetry
 
 ### Done
