@@ -4,6 +4,28 @@ Append-only. One entry per session that makes meaningful changes.
 
 ---
 
+## 2026-06-10 — Asset-weight pass: hero SVG, schema headshot, article OG image
+
+### Done
+- Built `tools/measure-lcp.mjs` (CDP + buffered `largest-contentful-paint` observer, Fast-3G-ish throttle) — before-state: homepage LCP element is the **wordmark text**, not `character.svg`; median LCP 1484 ms; 518 KB transferred, 64% of it the SVG
+- `character.svg` SVGO'd in place 331,807 → 200,143 bytes (−39.7%); screenshot diff: 13 px of 1,038,336 differ (RMSE 0.0003) — no visible change; hero `<img>` gains intrinsic `width/height` + `decoding="async"`
+- **No preload/fetchpriority** for the hero SVG — A/B measured (LCP is text-gated; deltas within run noise; a high-priority hint on a non-LCP decoration only contends with font CSS + style.css)
+- `justin_hearn.png` (Person schema image) 12,974,860 → 195,192 bytes at 672×900, same path — ImageMagick resize + pngquant (`--quality=40-65`); pngquant over `png8:` because the cutout needs palette alpha (37 levels vs 2 — binary alpha fringes the edges)
+- `pkm-llm-wiki-og-image.png` 1,844,740 → 181,579 bytes at exactly 1200×630 (1.91:1 OG spec, was 1344×768 @1.75:1), same path; center-crop verified to trim only floor — radial composition intact
+- Orphan check: `justin_hearn.svg` (1.2 MB) and `pkm-llm-wiki-og-image.svg` (573 KB) referenced nowhere — and discovered to be **untracked** local leftovers (never deployed); deleted from disk, no commit needed
+- Zero broken refs (swept src/href/content + CSS url() across html/css/xml); sitemap untouched; a11y / reduced-motion / no-GSAP paths untouched
+- DECISION doc: `docs/decisions/2026-06-10-asset-weight-pass.md`
+
+### Decisions
+- **Optimize in place at same paths** over JPEG/WebP rename — crawler + social caches keep working; ~30-40% byte penalty vs JPEG accepted for URL stability
+- **pngquant (libimagequant) over ImageMagick png8** — measured 8-bit palette alpha preservation; quality-per-byte visibly better
+- All transforms one-time dev-side CLI (`npx svgo`, `magick`, `npx pngquant-bin`, headless Chrome for diffs) — no build step, no runtime dependency added
+
+### Next
+- (image-weight item from April: **cleared**)
+
+---
+
 ## 2026-06-09 (night) — Live-feed resilience: SWR cache + timeout/retry + CLS fixes
 
 ### Done
