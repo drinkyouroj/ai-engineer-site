@@ -1,0 +1,60 @@
+# Build + deploy to GitHub Pages via Actions (Pages source must be set to
+# "GitHub Actions" in repo settings — see docs/decisions/2026-06-10).
+#
+# This is the deploy path for ALL site changes: every run re-bakes the
+# latest Civic Node feed into writing.html (tools/build-writing.mjs), so a
+# normal code push also refreshes the writing index. The generator fails
+# hard on feed problems, which aborts the deploy and leaves the previous
+# deploy live — staleness over breakage.
+#
+# Schedule notes: cron is UTC, and GitHub may delay or drop scheduled runs
+# (and disables them entirely after ~60 days without repo activity). The
+# publication typically posts Wed ~13:00-16:00 UTC and Fri ~22:00 UTC, so
+# runs land Wed evening, early Sat (catches Friday), and a Monday sweep.
+name: Deploy site
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '17 18 * * 3'   # Wed 18:17 UTC — after the Wednesday post
+    - cron: '17 2 * * 6'    # Sat 02:17 UTC — after the Friday-evening post
+    - cron: '17 12 * * 1'   # Mon 12:17 UTC — weekly catch-up sweep
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deploy at a time; don't cancel an in-flight production deploy.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Bake latest Civic Node posts into writing.html
+        run: node tools/build-writing.mjs
+
+      - uses: actions/configure-pages@v5
+
+      # Upload the site root: CNAME ships in the artifact so the custom
+      # domain holds. (.git and .github are excluded automatically.)
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
