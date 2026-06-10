@@ -1398,7 +1398,7 @@ p { line-height: var(--line-height-relaxed); }
 }
 
 .skeleton-writing .skeleton-date  { height: 12px; width: 90px; }
-.skeleton-writing .skeleton-title { height: 16px; width: 85%; margin-top: var(--space-1); }
+.skeleton-writing .skeleton-title { height: 40px; width: 85%; margin-top: var(--space-1); } /* two title lines — live post titles wrap */
 .skeleton-writing .skeleton-body  { display: flex; flex-direction: column; gap: var(--space-2); margin-top: var(--space-1); }
 .skeleton-writing .skeleton-body .skeleton-line { height: 13px; }
 .skeleton-writing .skeleton-body .skeleton-line:nth-child(2) { width: 90%; }
@@ -1416,7 +1416,8 @@ p { line-height: var(--line-height-relaxed); }
   border-radius: var(--border-radius-lg);
 }
 
-.skeleton-testimonial .skeleton-quote { height: 32px; width: 24px; }
+.skeleton-testimonial .skeleton-quote { height: 48px; width: 24px; }
+.skeleton-testimonial .skeleton-toggle { height: 12px; width: 160px; }
 .skeleton-testimonial .skeleton-body  { display: flex; flex-direction: column; gap: var(--space-2); }
 .skeleton-testimonial .skeleton-body .skeleton-line { height: 13px; }
 .skeleton-testimonial .skeleton-body .skeleton-line:nth-child(2) { width: 95%; }
