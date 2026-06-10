@@ -7,6 +7,11 @@
 # hard on feed problems, which aborts the deploy and leaves the previous
 # deploy live — staleness over breakage.
 #
+# Two jobs on purpose: `build` carries no environment, so dispatching the
+# workflow from a feature branch is a safe dry run (bakes + packages the
+# artifact, proves the feed fetch works from a runner). Only `deploy`
+# touches the protected github-pages environment, and it runs on main only.
+#
 # Schedule notes: cron is UTC, and GitHub may delay or drop scheduled runs
 # (and disables them entirely after ~60 days without repo activity). The
 # publication typically posts Wed ~13:00-16:00 UTC and Fri ~22:00 UTC, so
@@ -33,15 +38,12 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build-deploy:
+  build:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
 
@@ -56,5 +58,14 @@ jobs:
         with:
           path: .
 
+  deploy:
+    needs: build
+    # main only — branch dispatches stop after the build dry run
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - id: deployment
         uses: actions/deploy-pages@v4
