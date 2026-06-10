@@ -1351,6 +1351,22 @@ p { line-height: var(--line-height-relaxed); }
 }
 
 /* ─────────────────────────────────────────────────────────────────
+   FEED RECONCILE CROSSFADE
+   Applied by main.js when revalidated feed content replaces cached
+   content mid-session. The static featured card is excluded — it never
+   changes between renders. prefers-reduced-motion collapses the
+   animation to instant via the global rule in tokens.css.
+   ───────────────────────────────────────────────────────────────── */
+@keyframes feed-swap-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.feed-swap > :not([data-static]) {
+  animation: feed-swap-in var(--duration-feed-crossfade) var(--easing-out);
+}
+
+/* ─────────────────────────────────────────────────────────────────
    SKELETON LOADING STATES
    ───────────────────────────────────────────────────────────────── */
 @keyframes skeleton-shimmer {
