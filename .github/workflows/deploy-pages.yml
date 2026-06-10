@@ -47,6 +47,31 @@ jobs:
         with:
           node-version: 22
 
+      # TEMPORARY — diagnose which fetch identity Substack/Cloudflare
+      # accepts from a runner IP. Remove before merge.
+      - name: Diagnose feed fetch
+        run: |
+          FEED=https://drinkyouroj.substack.com/feed
+          try() { echo "curl [$1] UA='$2' -> $(curl -s -o /dev/null -w '%{http_code}' -A "$2" $3 "$FEED")"; }
+          try plain "curl/8" ""
+          try browser "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36" ""
+          try http1.1 "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36" "--http1.1"
+          try feedbot "FeedFetcher-Google; (+http://www.google.com/feedfetcher.html)" ""
+          try rssreader "Feedbin feed-id:1 - 1 subscribers" ""
+          node -e '
+            const uas = {
+              default: undefined,
+              browser: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
+              feedbin: "Feedbin feed-id:1 - 1 subscribers",
+            };
+            for (const [name, ua] of Object.entries(uas)) {
+              const headers = ua ? { "User-Agent": ua } : {};
+              fetch("https://drinkyouroj.substack.com/feed", { headers })
+                .then(r => console.log(`node [${name}] -> ${r.status}`))
+                .catch(e => console.log(`node [${name}] -> ${e.message}`));
+            }'
+        continue-on-error: true
+
       - name: Bake latest Civic Node posts into writing.html
         run: node tools/build-writing.mjs
 
