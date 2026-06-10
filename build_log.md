@@ -4,6 +4,32 @@ Append-only. One entry per session that makes meaningful changes.
 
 ---
 
+## 2026-06-10 — Writing re-homed on The Civic Node: auto-updating writing.html + Actions deploy
+
+### Done
+- Homepage: dropped the pinned PKM `data-static` card and `PKM_SLUG` filter; grid now shows the newest 3 Civic Node posts via the existing SWR loader; skeleton count 3; `FEED_CACHE_SCHEMA` 1→2; section relabeled "Latest from The Civic Node"
+- `writing.html`: retired the Tech & AI / Fiction sections and the old framing (title, meta, OG/Twitter, CollectionPage JSON-LD, h1/tagline, CTA); one generated reverse-chronological list between `FEED:START/END` markers + generated ItemList JSON-LD between `JSONLD:START/END`
+- New `tools/build-writing.mjs` — zero-dep Node ≥22 generator: raw feed XML (all 20 posts; rss2json caps at 10) → escaped cards + JSON-LD, idempotent (two runs diff clean), fails hard so a broken feed aborts the deploy instead of shipping a broken page
+- New `.github/workflows/deploy-pages.yml` — push + cron (Wed 18:17 / Sat 02:17 / Mon 12:17 UTC) + dispatch; build → `upload-pages-artifact` (site root, CNAME ships) → `deploy-pages`; no commits to main
+- `test-feeds.mjs`: removed stale staticCard probes; sitemap lastmod bumped
+- DECISION doc with full AAP transcript: `docs/decisions/2026-06-10-civic-node-writing-rehome.md`
+
+### Decisions
+- AAP JUDGE: `pkm-llm-wiki.html` keeps one permanent inbound link (writing.html footer chrome) — the essay is gone from the relaunched feed, so without it the page would be fully orphaned
+- Deploy-time generator fails hard (opposite of the client loader's graceful degradation): an aborted CI build keeps the last good deploy live
+- Known limits documented: scheduled runs can lag and are disabled after ~60 days of repo inactivity; committed writing.html is a snapshot, production re-bakes on every deploy
+
+### Verification
+- Generator idempotent against the live feed (20 posts, 2026-06-10); both JSON-LD blocks parse, ItemList positions 1–20
+- `test-feeds.mjs`: baseline writing CLS 0, inview 0.0007 (~0); offline cold → fallback message; offline --warm → 3 cached cards survive (SWR intact)
+- Internal-link grep clean; workflow YAML structurally validated (actionlint unavailable locally)
+
+### Next
+- **Manual (Justin):** after merge — Settings → Pages → Source → "GitHub Actions"; confirm www.justin.hearn.me custom domain, then run the workflow once via `workflow_dispatch` to verify the first Actions deploy
+- Watch the first scheduled runs land (Wed/Sat crons) and confirm writing.html refreshes
+
+---
+
 ## 2026-06-10 — Asset-weight pass: hero SVG, schema headshot, article OG image
 
 ### Done

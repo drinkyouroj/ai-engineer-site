@@ -1698,6 +1698,14 @@ p { line-height: var(--line-height-relaxed); }
   text-align: center;
 }
 
+/* Stack the archive + featured-essay links, matching .writing-footer */
+.writing-page-footer .container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}
+
 /* Mobile responsive for article pages */
 @media (max-width: 768px) {
   .article-header {

@@ -886,7 +886,7 @@ const FEED_TIMEOUT_MS       = 6000;  // per attempt, via AbortController
 const FEED_RETRIES          = 1;     // extra attempts after the first
 const FEED_RETRY_BACKOFF_MS = 1000;  // doubles per retry
 const FEED_CACHE_PREFIX     = 'feed:';
-const FEED_CACHE_SCHEMA     = 1;     // bump when a normalized card shape changes
+const FEED_CACHE_SCHEMA     = 2;     // bump when a normalized card shape changes
 
 function feedCacheRead(name) {
   try {
@@ -985,12 +985,7 @@ function fetchWritingPosts() {
 
   const RSS_URL  = 'https://drinkyouroj.substack.com/feed';
   const API      = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(RSS_URL)}`;
-  const PKM_SLUG = 'obsidian-was-never-the-problem';
 
-  // The pinned featured card is static HTML — captured once, before any DOM
-  // mutation, so every render path (fresh, cached, fallback) re-attaches it
-  // at the head of the grid.
-  const staticCard = grid.querySelector('[data-static]');
   let tweens = [];
 
   // Network + normalize + validate. The returned shape is exactly what
@@ -999,10 +994,9 @@ function fetchWritingPosts() {
     const data = await fetchJsonRetry(API);
     if (data.status !== 'ok' || !Array.isArray(data.items)) throw new Error('Feed error');
 
-    // Filter out the PKM article (already shown as the static card)
     const items = data.items
-      .filter(item => item && typeof item.link === 'string' && !item.link.includes(PKM_SLUG))
-      .slice(0, 2)
+      .filter(item => item && typeof item.link === 'string')
+      .slice(0, 3)
       .map(item => {
         // Strip HTML from description to a plain-text excerpt. DOMParser
         // yields an inert document — no resource loads, no event handlers.
@@ -1063,7 +1057,6 @@ function fetchWritingPosts() {
     const animateEntrance = entrance && hasGsap && !reduced;
 
     const fragment = document.createDocumentFragment();
-    if (staticCard) fragment.appendChild(staticCard);
     items.forEach(item => fragment.appendChild(buildCard(item, animateEntrance)));
     grid.replaceChildren(fragment);
     grid.setAttribute('aria-busy', 'false');
@@ -1100,7 +1093,7 @@ function fetchWritingPosts() {
     }
   }
 
-  // Cold-cache failure only — still links out, static card stays pinned
+  // Cold-cache failure only — still links out to the publication
   function renderFallback() {
     const msg  = document.createElement('p');
     msg.className = 'writing-error';
@@ -1108,11 +1101,10 @@ function fetchWritingPosts() {
     link.href   = 'https://drinkyouroj.substack.com';
     link.target = '_blank';
     link.rel    = 'noopener noreferrer';
-    link.textContent = 'read on Substack →';
+    link.textContent = 'read The Civic Node on Substack →';
     msg.append("Couldn't load posts — ", link);
 
-    if (staticCard) grid.replaceChildren(staticCard, msg);
-    else grid.replaceChildren(msg);
+    grid.replaceChildren(msg);
     grid.setAttribute('aria-busy', 'false');
   }
 
