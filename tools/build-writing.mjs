@@ -15,21 +15,38 @@
  * Output is a pure function of feed content (UTC dates, no timestamps), so
  * running twice produces identical bytes.
  *
- * FAILS HARD (non-zero exit) on any anomaly — fetch error, empty feed,
- * missing fields, non-Substack URLs, missing/duplicated markers. In CI the
- * build aborting means the previous deploy stays live, which beats shipping
- * a broken or empty writing page.
+ * SOURCES — Cloudflare 403s ALL fetches from GitHub-runner IPs (verified
+ * empirically: curl + node, browser/feed-reader UAs, HTTP/1.1 + 2 — every
+ * combination), so the raw feed only works from residential IPs:
+ *   1. raw feed XML (all ~20 items) — works locally, blocked in CI
+ *   2. rss2json (already a site dependency — the homepage uses it): its
+ *      servers fetch the feed from THEIR IPs, so it works in CI, but caps
+ *      at 10 items
+ * Either way, the fetched items are UNIONED with the cards already baked
+ * between the markers (dedupe by URL, newest first), so the committed page
+ * doubles as a persistent archive and a 10-item source loses nothing.
+ * CAVEAT: if more than 10 posts are published between local re-bakes
+ * (raw feed, full window), the overflow never transits rss2json's window —
+ * re-run this script locally and commit the refreshed snapshot now and then.
+ *
+ * FAILS HARD (non-zero exit) on any anomaly — both sources failing, empty
+ * feed, missing fields, non-Substack URLs, missing/duplicated markers. In
+ * CI the build aborting means the previous deploy stays live, which beats
+ * shipping a broken or empty writing page.
  *
  * Usage: node tools/build-writing.mjs        (Node ≥ 22, zero dependencies)
+ *        BUILD_WRITING_FORCE_FALLBACK=1 …    (skip the raw feed; test the
+ *                                             rss2json path from anywhere)
  */
 
 import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
 
-const FEED_URL    = 'https://drinkyouroj.substack.com/feed';
-const LINK_PREFIX = 'https://drinkyouroj.substack.com/';
-const PAGE_PATH   = join(dirname(fileURLToPath(import.meta.url)), '..', 'writing.html');
+const FEED_URL     = 'https://drinkyouroj.substack.com/feed';
+const RSS2JSON_URL = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(FEED_URL)}`;
+const LINK_PREFIX  = 'https://drinkyouroj.substack.com/';
+const PAGE_PATH    = join(dirname(fileURLToPath(import.meta.url)), '..', 'writing.html');
 
 const FETCH_TIMEOUT_MS = 15000;
 const FETCH_RETRIES    = 1;     // extra attempts after the first
@@ -51,7 +68,7 @@ const FETCH_HEADERS = {
   'Accept-Language': 'en-US,en;q=0.9',
 };
 
-async function fetchFeed(url) {
+async function fetchText(url) {
   let lastErr;
   for (let attempt = 0; attempt <= FETCH_RETRIES; attempt++) {
     if (attempt > 0) await new Promise(r => setTimeout(r, 1000 * attempt));
@@ -67,6 +84,45 @@ async function fetchFeed(url) {
     }
   }
   throw lastErr;
+}
+
+// Raw feed first (full item window; works from residential IPs), rss2json
+// second (10-item window; works from CI). See SOURCES in the header.
+async function fetchItems() {
+  if (!process.env.BUILD_WRITING_FORCE_FALLBACK) {
+    try {
+      return { source: 'raw feed', items: parseItems(await fetchText(FEED_URL)) };
+    } catch (err) {
+      console.warn(`build-writing: raw feed failed (${err.message}) — falling back to rss2json`);
+    }
+  }
+  let data;
+  try {
+    data = JSON.parse(await fetchText(RSS2JSON_URL));
+  } catch (err) {
+    fail(`rss2json fetch failed too: ${err.message}`);
+  }
+  if (data.status !== 'ok' || !Array.isArray(data.items) || !data.items.length) {
+    fail(`rss2json returned no usable items (status: ${data.status})`);
+  }
+  return { source: 'rss2json', items: data.items.map(normalizeRss2jsonItem) };
+}
+
+function normalizeRss2jsonItem(item, i) {
+  const title   = String(item.title || '').replace(/\s+/g, ' ').trim();
+  const url     = String(item.link || '').trim();
+  const excerpt = toExcerpt(String(item.description || item.content || ''));
+  // rss2json pubDate is "YYYY-MM-DD HH:MM:SS" in UTC with no zone marker —
+  // make the UTC explicit so local and CI runs parse identically.
+  const raw  = String(item.pubDate || '').trim();
+  const date = new Date(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(raw)
+    ? raw.replace(' ', 'T') + 'Z' : raw);
+
+  if (!title)                       fail(`rss2json item ${i + 1}: missing title`);
+  if (!url.startsWith(LINK_PREFIX)) fail(`rss2json item ${i + 1}: unexpected link "${url}"`);
+  if (Number.isNaN(date.getTime())) fail(`rss2json item ${i + 1}: bad pubDate "${raw}"`);
+
+  return { title, url, date, excerpt };
 }
 
 // ── Parse (hand-rolled — the Substack feed shape is simple and known) ──
@@ -130,6 +186,46 @@ function escapeHtml(s) {
     .replace(/'/g, '&#39;');
 }
 
+// Exact inverse of escapeHtml — only ever applied to values this script
+// escaped on a previous run.
+function unescapeHtml(s) {
+  return s
+    .replace(/&#39;/g, "'")
+    .replace(/&quot;/g, '"')
+    .replace(/&gt;/g, '>')
+    .replace(/&lt;/g, '<')
+    .replace(/&amp;/g, '&');
+}
+
+// ── Archive union ──────────────────────────────────────────────────
+// The committed page doubles as the archive: read back the cards baked on
+// previous runs so a capped source (rss2json's 10-item window) never drops
+// older posts from the page.
+
+const CARD_RE = new RegExp(
+  '<a\\s+href="([^"]+)"[\\s\\S]*?'
+  + '<time class="writing-date" datetime="([^"]+)">[^<]*</time>\\s*'
+  + '<h3 class="writing-title">([\\s\\S]*?)</h3>\\s*'
+  + '<p class="writing-excerpt">([\\s\\S]*?)</p>', 'g');
+
+function parseBakedCards(page) {
+  const start = page.indexOf('FEED:START');
+  const end   = page.indexOf('FEED:END');
+  if (start === -1 || end === -1) return []; // splice will fail loudly later
+  const region = page.slice(start, end);
+  return [...region.matchAll(CARD_RE)].map(([, url, datetime, title, excerpt]) => ({
+    title:   unescapeHtml(title.trim()),
+    url:     unescapeHtml(url),
+    date:    new Date(datetime),
+    excerpt: unescapeHtml(excerpt.trim()),
+  })).filter(c => c.url.startsWith(LINK_PREFIX) && !Number.isNaN(c.date.getTime()));
+}
+
+function unionByUrl(fresh, baked) {
+  const seen = new Set(fresh.map(i => i.url));
+  return [...fresh, ...baked.filter(i => !seen.has(i.url))];
+}
+
 // Deterministic across machines: explicit locale + UTC.
 const fmtDate = new Intl.DateTimeFormat('en-US', {
   month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC',
@@ -189,20 +285,17 @@ function spliceBetween(src, startTag, endTag, body) {
 
 // ── Main ───────────────────────────────────────────────────────────
 
-let xml;
-try {
-  xml = await fetchFeed(FEED_URL);
-} catch (err) {
-  fail(`feed fetch failed: ${err.message}`);
-}
-
-const items = parseItems(xml).sort((a, b) => b.date - a.date);
-if (!items.length) fail('feed parsed to zero items');
+const { source, items: fresh } = await fetchItems();
+if (!fresh.length) fail('feed parsed to zero items');
 
 let page = readFileSync(PAGE_PATH, 'utf8');
+const baked = parseBakedCards(page);
+const items = unionByUrl(fresh, baked).sort((a, b) => b.date - a.date);
+
 page = spliceBetween(page, 'FEED:START', 'FEED:END', items.map(renderCard).join('\n'));
 page = spliceBetween(page, 'JSONLD:START', 'JSONLD:END', renderJsonLd(items));
 writeFileSync(PAGE_PATH, page);
 
 console.log(`build-writing: baked ${items.length} posts into writing.html `
-          + `(newest: "${items[0].title}", ${items[0].date.toISOString().slice(0, 10)})`);
+          + `(${fresh.length} via ${source}, ${items.length - fresh.length} from the baked archive; `
+          + `newest: "${items[0].title}", ${items[0].date.toISOString().slice(0, 10)})`);
