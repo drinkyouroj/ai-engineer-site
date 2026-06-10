@@ -871,96 +871,222 @@ function setupMobileNav() {
 }
 
 // ─────────────────────────────────────────────────────────────────
+// RESILIENT FEED LOADER — shared by Writing + Testimonials
+//
+// Strategy: stale-while-revalidate. Last-good data (localStorage)
+// renders immediately on repeat visits; the network revalidates in
+// the background and re-renders only when content actually changed.
+// Network failures keep last-good content on screen — the link-out
+// fallback is reserved for cold-cache + failure.
+// ─────────────────────────────────────────────────────────────────
+
+// Network tuning — JS logic, not design tokens (see CLAUDE.md).
+// rss2json answers in ~2-3s when healthy, so the timeout must clear that.
+const FEED_TIMEOUT_MS       = 6000;  // per attempt, via AbortController
+const FEED_RETRIES          = 1;     // extra attempts after the first
+const FEED_RETRY_BACKOFF_MS = 1000;  // doubles per retry
+const FEED_CACHE_PREFIX     = 'feed:';
+const FEED_CACHE_SCHEMA     = 1;     // bump when a normalized card shape changes
+
+function feedCacheRead(name) {
+  try {
+    const raw = localStorage.getItem(FEED_CACHE_PREFIX + name);
+    if (!raw) return null;
+    const entry = JSON.parse(raw);
+    // Stale schema reads as a miss — never render old shapes with new code
+    if (entry.schema !== FEED_CACHE_SCHEMA) return null;
+    if (!Array.isArray(entry.items) || !entry.items.length) return null;
+    return entry.items;
+  } catch (_) {
+    return null; // blocked storage / corrupt JSON — behave like a cold load
+  }
+}
+
+function feedCacheWrite(name, items) {
+  try {
+    localStorage.setItem(
+      FEED_CACHE_PREFIX + name,
+      JSON.stringify({ schema: FEED_CACHE_SCHEMA, savedAt: Date.now(), items })
+    );
+  } catch (_) { /* quota or private mode — cache is best-effort */ }
+}
+
+// fetch + parse with an abortable timeout and bounded retry.
+// Retries cover network errors, timeouts, and 5xx. 4xx never retries —
+// rss2json rate-limits, and hammering a 429 compounds the problem.
+async function fetchJsonRetry(url, { retries = FEED_RETRIES, fetchOpts = {} } = {}) {
+  let lastErr;
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    if (attempt > 0) {
+      await new Promise(r => setTimeout(r, FEED_RETRY_BACKOFF_MS * (2 ** (attempt - 1))));
+    }
+    const ctrl  = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), FEED_TIMEOUT_MS);
+    try {
+      const res = await fetch(url, { ...fetchOpts, signal: ctrl.signal });
+      if (res.ok) return await res.json();
+      lastErr = new Error(`HTTP ${res.status}`);
+      if (res.status < 500) break;
+    } catch (err) {
+      lastErr = err;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+  throw lastErr;
+}
+
+async function loadFeedSWR({ name, fetchFresh, render, renderFallback }) {
+  const cached = feedCacheRead(name);
+  if (cached) render(cached, { entrance: true });
+
+  try {
+    const fresh = await fetchFresh();
+    feedCacheWrite(name, fresh);
+    if (!cached) {
+      render(fresh, { entrance: true });
+    } else if (JSON.stringify(fresh) !== JSON.stringify(cached)) {
+      // Reconcile: content really changed — quiet crossfade, no re-reveal
+      render(fresh, { entrance: false });
+    }
+  } catch (err) {
+    console.warn(`[${name}] fetch failed${cached ? ' — keeping cached content' : ''}:`, err);
+    if (!cached) renderFallback();
+  }
+}
+
+function bindCursorHover(nodes) {
+  nodes.forEach(node => {
+    node.addEventListener('mouseenter', () => document.body.classList.add('cursor-hover'));
+    node.addEventListener('mouseleave', () => document.body.classList.remove('cursor-hover'));
+  });
+}
+
+function killFeedTweens(tweens) {
+  tweens.forEach(t => {
+    if (t.scrollTrigger) t.scrollTrigger.kill();
+    t.kill();
+  });
+}
+
+// Restart the CSS reconcile crossfade (.feed-swap in style.css)
+function restartFeedSwap(grid) {
+  grid.classList.remove('feed-swap');
+  void grid.offsetWidth; // flush so the animation re-runs
+  grid.classList.add('feed-swap');
+}
+
+// ─────────────────────────────────────────────────────────────────
 // WRITING: Live Substack RSS feed via rss2json CORS proxy
 // ─────────────────────────────────────────────────────────────────
-async function fetchWritingPosts() {
+function fetchWritingPosts() {
   const grid = document.querySelector('.writing-grid');
   if (!grid) return;
 
-  const RSS_URL   = 'https://drinkyouroj.substack.com/feed';
-  const API       = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(RSS_URL)}`;
+  const RSS_URL  = 'https://drinkyouroj.substack.com/feed';
+  const API      = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(RSS_URL)}`;
+  const PKM_SLUG = 'obsidian-was-never-the-problem';
 
-  try {
-    const res  = await fetch(API);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    if (data.status !== 'ok') throw new Error('Feed error');
+  // The pinned featured card is static HTML — captured once, before any DOM
+  // mutation, so every render path (fresh, cached, fallback) re-attaches it
+  // at the head of the grid.
+  const staticCard = grid.querySelector('[data-static]');
+  let tweens = [];
 
-    // Preserve the static featured card (data-static="true") before replacing children
-    const staticCard = grid.querySelector('[data-static]');
+  // Network + normalize + validate. The returned shape is exactly what
+  // render() consumes and what the cache stores (see FEED_CACHE_SCHEMA).
+  async function fetchFresh() {
+    const data = await fetchJsonRetry(API);
+    if (data.status !== 'ok' || !Array.isArray(data.items)) throw new Error('Feed error');
 
-    // Filter out the PKM article (already shown as the static card) and take next 3
-    const PKM_SLUG = 'obsidian-was-never-the-problem';
+    // Filter out the PKM article (already shown as the static card)
     const items = data.items
-      .filter(item => !item.link.includes(PKM_SLUG))
-      .slice(0, 2);
+      .filter(item => item && typeof item.link === 'string' && !item.link.includes(PKM_SLUG))
+      .slice(0, 2)
+      .map(item => {
+        // Strip HTML from description to a plain-text excerpt. DOMParser
+        // yields an inert document — no resource loads, no event handlers.
+        const doc = new DOMParser().parseFromString(item.description || item.content || '', 'text/html');
+        const raw = (doc.body.textContent || '').replace(/\s+/g, ' ').trim();
+        return {
+          title:   String(item.title || ''),
+          link:    item.link,
+          pubDate: String(item.pubDate || ''),
+          excerpt: raw.length > 140 ? raw.slice(0, 140).trimEnd() + '…' : raw,
+        };
+      });
 
-    // Build card nodes — no innerHTML with untrusted data
+    if (!items.length) throw new Error('Empty feed');
+    return items;
+  }
+
+  function buildCard(item, withReveal) {
+    const date    = new Date(item.pubDate);
+    const dateStr = date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+
+    const card = document.createElement('a');
+    card.href             = item.link;
+    card.target           = '_blank';
+    card.rel              = 'noopener noreferrer';
+    card.className        = withReveal ? 'writing-card reveal' : 'writing-card';
+    card.setAttribute('aria-label', `Read: ${item.title} on Substack`);
+
+    const time = document.createElement('time');
+    time.className        = 'writing-date';
+    time.setAttribute('datetime', item.pubDate);
+    time.textContent      = dateStr;
+
+    const title = document.createElement('h3');
+    title.className       = 'writing-title';
+    title.textContent     = item.title;
+
+    const body  = document.createElement('p');
+    body.className        = 'writing-excerpt';
+    body.textContent      = item.excerpt;
+
+    const cta   = document.createElement('span');
+    cta.className         = 'writing-cta';
+    cta.textContent       = 'Read on Substack →';
+
+    card.append(time, title, body, cta);
+    return card;
+  }
+
+  function render(items, { entrance }) {
+    killFeedTweens(tweens);
+    tweens = [];
+
+    const hasGsap = typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined';
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // Only hide cards behind the .reveal class when GSAP will actually
+    // reveal them — otherwise they'd be stranded at opacity 0
+    const animateEntrance = entrance && hasGsap && !reduced;
+
     const fragment = document.createDocumentFragment();
-
-    // Re-attach the static card first so it always leads the grid
     if (staticCard) fragment.appendChild(staticCard);
-
-    items.forEach((item, i) => {
-      // Strip HTML from description to get plain-text excerpt
-      const tmp = document.createElement('div');
-      tmp.innerHTML = item.description || item.content || '';
-      const raw     = (tmp.textContent || '').replace(/\s+/g, ' ').trim();
-      const excerpt = raw.length > 140 ? raw.slice(0, 140).trimEnd() + '…' : raw;
-
-      // Format publish date
-      const date    = new Date(item.pubDate);
-      const dateStr = date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-
-      const card = document.createElement('a');
-      card.href             = item.link;
-      card.target           = '_blank';
-      card.rel              = 'noopener noreferrer';
-      card.className        = 'writing-card reveal';
-      card.setAttribute('aria-label', `Read: ${item.title} on Substack`);
-
-      const time = document.createElement('time');
-      time.className        = 'writing-date';
-      time.setAttribute('datetime', item.pubDate);
-      time.textContent      = dateStr;
-
-      const title = document.createElement('h3');
-      title.className       = 'writing-title';
-      title.textContent     = item.title;
-
-      const body  = document.createElement('p');
-      body.className        = 'writing-excerpt';
-      body.textContent      = excerpt;
-
-      const cta   = document.createElement('span');
-      cta.className         = 'writing-cta';
-      cta.textContent       = 'Read on Substack →';
-
-      card.append(time, title, body, cta);
-      fragment.appendChild(card);
-    });
-
+    items.forEach(item => fragment.appendChild(buildCard(item, animateEntrance)));
     grid.replaceChildren(fragment);
+    grid.setAttribute('aria-busy', 'false');
 
-    // Re-bind cursor hover on freshly-injected cards
-    grid.querySelectorAll('.writing-card').forEach(card => {
-      card.addEventListener('mouseenter', () => document.body.classList.add('cursor-hover'));
-      card.addEventListener('mouseleave', () => document.body.classList.remove('cursor-hover'));
-    });
+    const cards = grid.querySelectorAll('.writing-card');
+    bindCursorHover(cards);
 
-    // Animate cards — GSAP if loaded, plain CSS otherwise
-    if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
-      gsap.fromTo('.writing-card.reveal',
+    if (animateEntrance) {
+      tweens.push(gsap.fromTo('.writing-card.reveal',
         { opacity: 0, y: 32 },
         {
           opacity: 1, y: 0,
           duration: 0.55, stagger: 0.12, ease: 'power2.out',
           scrollTrigger: { trigger: '.writing-grid', start: 'top 82%' }
         }
-      );
+      ));
+    } else if (!entrance && !reduced) {
+      restartFeedSwap(grid);
+    }
 
-      grid.querySelectorAll('.writing-card').forEach((card, i) => {
-        gsap.to(card, {
+    if (hasGsap && !reduced) {
+      cards.forEach((card, i) => {
+        tweens.push(gsap.to(card, {
           y: -20 - (i * 10),
           ease: 'none',
           scrollTrigger: {
@@ -969,18 +1095,13 @@ async function fetchWritingPosts() {
             end: 'bottom top',
             scrub: 2,
           }
-        });
+        }));
       });
-    } else {
-      // No GSAP — immediately show cards
-      grid.querySelectorAll('.writing-card').forEach(c => c.style.opacity = '1');
     }
+  }
 
-  } catch (err) {
-    console.warn('[Writing] Substack fetch failed:', err);
-
-    // Graceful fallback — still links to Substack
-    grid.replaceChildren();
+  // Cold-cache failure only — still links out, static card stays pinned
+  function renderFallback() {
     const msg  = document.createElement('p');
     msg.className = 'writing-error';
     const link = document.createElement('a');
@@ -989,162 +1110,179 @@ async function fetchWritingPosts() {
     link.rel    = 'noopener noreferrer';
     link.textContent = 'read on Substack →';
     msg.append("Couldn't load posts — ", link);
-    grid.appendChild(msg);
+
+    if (staticCard) grid.replaceChildren(staticCard, msg);
+    else grid.replaceChildren(msg);
+    grid.setAttribute('aria-busy', 'false');
   }
+
+  loadFeedSWR({ name: 'writing', fetchFresh, render, renderFallback });
 }
 
 // ─────────────────────────────────────────────────────────────────
 // TESTIMONIALS: Fetched from drinkyouroj.github.io
 // ─────────────────────────────────────────────────────────────────
-async function fetchTestimonials() {
+function fetchTestimonials() {
   const grid = document.querySelector('.testimonials-grid');
   if (!grid) return;
 
-  const BASE     = 'https://drinkyouroj.github.io/assets/testimonials/';
-  const IMG_BASE = BASE;
+  const BASE = 'https://drinkyouroj.github.io/assets/testimonials/';
+  let tweens = [];
 
-  try {
-    // Fetch index (list + clips) and all individual full-text JSONs in parallel
-    const indexRes = await fetch(BASE + 'index.json', { cache: 'no-store' });
-    if (!indexRes.ok) throw new Error(`HTTP ${indexRes.status}`);
-    const data = await indexRes.json();
+  // Network + normalize + validate. The index lists everything render()
+  // needs except full text, which comes from per-slug JSONs; a failed
+  // per-slug fetch degrades that card to clip-only, never to an error.
+  async function fetchFresh() {
+    const data = await fetchJsonRetry(BASE + 'index.json', { fetchOpts: { cache: 'no-store' } });
     const list = Array.isArray(data?.testimonials) ? data.testimonials : [];
     if (!list.length) throw new Error('No testimonials');
 
     const fullTexts = await Promise.all(
       list.map(t =>
-        fetch(`${BASE}${encodeURIComponent(t.slug)}.json`, { cache: 'no-store' })
-          .then(r => r.ok ? r.json() : null)
+        fetchJsonRetry(`${BASE}${encodeURIComponent(t.slug)}.json`,
+          { fetchOpts: { cache: 'no-store' }, retries: 0 })
           .catch(() => null)
       )
     );
 
-    const fragment = document.createDocumentFragment();
-
-    list.forEach((t, i) => {
+    return list.map((t, i) => {
       const full     = fullTexts[i];
       const nameMode = String(t.carousel_display_name || 'irl').toLowerCase();
-      const name     = nameMode === 'online'
-        ? (t.name_online || t.name_irl || '')
-        : (t.name_irl    || t.name_online || '');
+      return {
+        name: nameMode === 'online'
+          ? (t.name_online || t.name_irl || '')
+          : (t.name_irl    || t.name_online || ''),
+        // Prefer index role_company — it's consistently more detailed
+        role:     t.role_company || full?.role_company || '',
+        clip:     t.testimonial_clip || '',
+        full:     full?.testimonial_full || '',
+        headshot: t.headshot_image_url ? BASE + t.headshot_image_url.split('/').pop() : '',
+        refUrl:   t.referral_link_url  || '',
+        refText:  t.referral_link_text || '',
+      };
+    });
+  }
 
-      const card = document.createElement('article');
-      card.className = 'testimonial-card reveal';
+  function buildCard(t, withReveal) {
+    const card = document.createElement('article');
+    card.className = withReveal ? 'testimonial-card reveal' : 'testimonial-card';
 
-      // Decorative opening quote mark
-      const quoteMark = document.createElement('span');
-      quoteMark.className   = 'testimonial-quote-mark';
-      quoteMark.textContent = '\u201C';
-      quoteMark.setAttribute('aria-hidden', 'true');
+    // Decorative opening quote mark
+    const quoteMark = document.createElement('span');
+    quoteMark.className   = 'testimonial-quote-mark';
+    quoteMark.textContent = '“';
+    quoteMark.setAttribute('aria-hidden', 'true');
 
-      // Clip text (shown by default)
-      const clipEl = document.createElement('p');
-      clipEl.className   = 'testimonial-body testimonial-clip-text';
-      clipEl.textContent = t.testimonial_clip || '';
+    // Clip text (shown by default)
+    const clipEl = document.createElement('p');
+    clipEl.className   = 'testimonial-body testimonial-clip-text';
+    clipEl.textContent = t.clip;
 
-      card.append(quoteMark, clipEl);
+    card.append(quoteMark, clipEl);
 
-      // Full text (hidden until toggled) — only if available and different from clip
-      const fullText = full?.testimonial_full || '';
-      if (fullText && fullText !== t.testimonial_clip) {
-        const fullEl = document.createElement('p');
-        fullEl.className   = 'testimonial-body testimonial-full-text';
-        fullEl.textContent = fullText;
-        // Preserve paragraph breaks from the source
-        fullEl.style.whiteSpace = 'pre-line';
-        card.appendChild(fullEl);
+    // Full text (hidden until toggled) — only if available and different from clip
+    if (t.full && t.full !== t.clip) {
+      const fullEl = document.createElement('p');
+      fullEl.className   = 'testimonial-body testimonial-full-text';
+      fullEl.textContent = t.full;
+      // Preserve paragraph breaks from the source
+      fullEl.style.whiteSpace = 'pre-line';
+      card.appendChild(fullEl);
 
-        const toggle = document.createElement('button');
-        toggle.className        = 'testimonial-toggle';
-        toggle.textContent      = 'Read full testimonial ↓';
-        toggle.setAttribute('aria-expanded', 'false');
-        toggle.addEventListener('click', () => {
-          const expanded = card.classList.toggle('expanded');
-          toggle.textContent = expanded ? 'Collapse ↑' : 'Read full testimonial ↓';
-          toggle.setAttribute('aria-expanded', String(expanded));
-        });
-        card.appendChild(toggle);
-      }
-
-      // Divider
-      const divider = document.createElement('hr');
-      divider.className = 'testimonial-divider';
-
-      // Person row
-      const person = document.createElement('div');
-      person.className = 'testimonial-person';
-
-      // Headshot
-      const img = document.createElement('img');
-      img.className = 'testimonial-avatar';
-      img.alt       = name;
-      img.width     = 40;
-      img.height    = 40;
-      img.loading   = 'lazy';
-      if (t.headshot_image_url) {
-        img.src = IMG_BASE + t.headshot_image_url.split('/').pop();
-      }
-      img.addEventListener('error', () => {
-        const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
-        img.src = `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><rect width='40' height='40' rx='20' fill='%231a1a1a'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='monospace' font-size='14' fill='%233b82f6'>${initials}</text></svg>`;
-        img.alt = initials;
+      const toggle = document.createElement('button');
+      toggle.className        = 'testimonial-toggle';
+      toggle.textContent      = 'Read full testimonial ↓';
+      toggle.setAttribute('aria-expanded', 'false');
+      toggle.addEventListener('click', () => {
+        const expanded = card.classList.toggle('expanded');
+        toggle.textContent = expanded ? 'Collapse ↑' : 'Read full testimonial ↓';
+        toggle.setAttribute('aria-expanded', String(expanded));
       });
+      card.appendChild(toggle);
+    }
 
-      // Meta: name, role, LinkedIn
-      const meta = document.createElement('div');
-      meta.className = 'testimonial-meta';
+    // Divider
+    const divider = document.createElement('hr');
+    divider.className = 'testimonial-divider';
 
-      const nameEl = document.createElement('p');
-      nameEl.className   = 'testimonial-name';
-      nameEl.textContent = name;
+    // Person row
+    const person = document.createElement('div');
+    person.className = 'testimonial-person';
 
-      // Prefer index role_company — it's consistently more detailed
-      const roleEl = document.createElement('p');
-      roleEl.className   = 'testimonial-role';
-      roleEl.textContent = t.role_company || full?.role_company || '';
-
-      meta.append(nameEl, roleEl);
-
-      if (t.referral_link_url && t.referral_link_text) {
-        const link = document.createElement('a');
-        link.className   = 'testimonial-link';
-        link.href        = t.referral_link_url;
-        link.target      = '_blank';
-        link.rel         = 'noopener noreferrer';
-        link.textContent = t.referral_link_text + ' ↗';
-        meta.appendChild(link);
-      }
-
-      person.append(img, meta);
-      card.append(divider, person);
-      fragment.appendChild(card);
+    // Headshot — falls back to initials if the image fails to load
+    const img = document.createElement('img');
+    img.className = 'testimonial-avatar';
+    img.alt       = t.name;
+    img.width     = 40;
+    img.height    = 40;
+    img.loading   = 'lazy';
+    if (t.headshot) img.src = t.headshot;
+    img.addEventListener('error', () => {
+      const initials = t.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+      img.src = `data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40'><rect width='40' height='40' rx='20' fill='%231a1a1a'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='monospace' font-size='14' fill='%233b82f6'>${initials}</text></svg>`;
+      img.alt = initials;
     });
 
+    // Meta: name, role, LinkedIn
+    const meta = document.createElement('div');
+    meta.className = 'testimonial-meta';
+
+    const nameEl = document.createElement('p');
+    nameEl.className   = 'testimonial-name';
+    nameEl.textContent = t.name;
+
+    const roleEl = document.createElement('p');
+    roleEl.className   = 'testimonial-role';
+    roleEl.textContent = t.role;
+
+    meta.append(nameEl, roleEl);
+
+    if (t.refUrl && t.refText) {
+      const link = document.createElement('a');
+      link.className   = 'testimonial-link';
+      link.href        = t.refUrl;
+      link.target      = '_blank';
+      link.rel         = 'noopener noreferrer';
+      link.textContent = t.refText + ' ↗';
+      meta.appendChild(link);
+    }
+
+    person.append(img, meta);
+    card.append(divider, person);
+    return card;
+  }
+
+  function render(items, { entrance }) {
+    killFeedTweens(tweens);
+    tweens = [];
+
+    const hasGsap = typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined';
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const animateEntrance = entrance && hasGsap && !reduced;
+
+    const fragment = document.createDocumentFragment();
+    items.forEach(t => fragment.appendChild(buildCard(t, animateEntrance)));
     grid.replaceChildren(fragment);
+    grid.setAttribute('aria-busy', 'false');
 
-    // Cursor hover bindings
-    grid.querySelectorAll('.testimonial-card').forEach(card => {
-      card.addEventListener('mouseenter', () => document.body.classList.add('cursor-hover'));
-      card.addEventListener('mouseleave', () => document.body.classList.remove('cursor-hover'));
-    });
+    bindCursorHover(grid.querySelectorAll('.testimonial-card'));
 
-    // GSAP reveal
-    if (typeof gsap !== 'undefined' && typeof ScrollTrigger !== 'undefined') {
-      gsap.fromTo('.testimonial-card.reveal',
+    if (animateEntrance) {
+      tweens.push(gsap.fromTo('.testimonial-card.reveal',
         { opacity: 0, y: 32 },
         {
           opacity: 1, y: 0,
           duration: 0.55, stagger: 0.12, ease: 'power2.out',
           scrollTrigger: { trigger: '.testimonials-grid', start: 'top 82%' }
         }
-      );
-    } else {
-      grid.querySelectorAll('.testimonial-card').forEach(c => c.style.opacity = '1');
+      ));
+    } else if (!entrance && !reduced) {
+      restartFeedSwap(grid);
     }
+  }
 
-  } catch (err) {
-    console.warn('[Testimonials] Fetch failed:', err);
-    grid.replaceChildren();
+  // Cold-cache failure only — still links out to the original site
+  function renderFallback() {
     const msg  = document.createElement('p');
     msg.className   = 'testimonials-error';
     msg.textContent = 'Testimonials unavailable — ';
@@ -1154,6 +1292,9 @@ async function fetchTestimonials() {
     link.rel         = 'noopener noreferrer';
     link.textContent = 'view on the original site →';
     msg.appendChild(link);
-    grid.appendChild(msg);
+    grid.replaceChildren(msg);
+    grid.setAttribute('aria-busy', 'false');
   }
+
+  loadFeedSWR({ name: 'testimonials', fetchFresh, render, renderFallback });
 }

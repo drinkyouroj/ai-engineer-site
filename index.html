@@ -373,7 +373,7 @@
     <section id="writing" class="section section-alt" aria-labelledby="writing-heading">
       <div class="container">
         <p class="section-label" id="writing-heading">Writing</p>
-        <div class="writing-grid" aria-live="polite" aria-label="Writing posts">
+        <div class="writing-grid" aria-live="polite" aria-busy="true" aria-label="Writing posts">
           <!-- Featured article — static, preserved by fetchWritingPosts() in main.js -->
           <a
             href="/pkm-llm-wiki.html"
@@ -389,11 +389,14 @@
             </p>
             <span class="writing-cta">Read essay →</span>
           </a>
-          <!-- Skeleton cards — replaced by fetchWritingPosts() in main.js -->
+          <!-- Skeleton cards — replaced by fetchWritingPosts() in main.js.
+               Count matches the rendered state (static card + 2 RSS cards)
+               so the swap can't collapse a grid row. -->
           <div class="skeleton-writing" aria-hidden="true">
             <div class="skeleton-line skeleton-date"></div>
             <div class="skeleton-line skeleton-title"></div>
             <div class="skeleton-body">
+              <div class="skeleton-line"></div>
               <div class="skeleton-line"></div>
               <div class="skeleton-line"></div>
               <div class="skeleton-line"></div>
@@ -405,15 +408,6 @@
             <div class="skeleton-line skeleton-title"></div>
             <div class="skeleton-body">
               <div class="skeleton-line"></div>
-              <div class="skeleton-line"></div>
-              <div class="skeleton-line"></div>
-            </div>
-            <div class="skeleton-line skeleton-cta"></div>
-          </div>
-          <div class="skeleton-writing" aria-hidden="true">
-            <div class="skeleton-line skeleton-date"></div>
-            <div class="skeleton-line skeleton-title"></div>
-            <div class="skeleton-body">
               <div class="skeleton-line"></div>
               <div class="skeleton-line"></div>
               <div class="skeleton-line"></div>
@@ -436,8 +430,10 @@
     <section id="testimonials" class="section" aria-labelledby="testimonials-heading">
       <div class="container">
         <p class="section-label" id="testimonials-heading">Testimonials</p>
-        <div class="testimonials-grid" aria-live="polite" aria-label="Testimonials">
-          <!-- Skeleton cards — replaced by fetchTestimonials() in main.js -->
+        <div class="testimonials-grid" aria-live="polite" aria-busy="true" aria-label="Testimonials">
+          <!-- Skeleton cards — replaced by fetchTestimonials() in main.js.
+               Count mirrors the live feed (3 testimonials) — if that count
+               changes, change the skeleton count with it. -->
           <div class="skeleton-testimonial" aria-hidden="true">
             <div class="skeleton-line skeleton-quote"></div>
             <div class="skeleton-body">
@@ -445,7 +441,13 @@
               <div class="skeleton-line"></div>
               <div class="skeleton-line"></div>
               <div class="skeleton-line"></div>
+              <div class="skeleton-line"></div>
+              <div class="skeleton-line"></div>
+              <div class="skeleton-line"></div>
+              <div class="skeleton-line"></div>
+              <div class="skeleton-line"></div>
             </div>
+            <div class="skeleton-line skeleton-toggle"></div>
             <div class="skeleton-divider"></div>
             <div class="skeleton-person">
               <div class="skeleton-line skeleton-avatar"></div>
@@ -462,7 +464,13 @@
               <div class="skeleton-line"></div>
               <div class="skeleton-line"></div>
               <div class="skeleton-line"></div>
+              <div class="skeleton-line"></div>
+              <div class="skeleton-line"></div>
+              <div class="skeleton-line"></div>
+              <div class="skeleton-line"></div>
+              <div class="skeleton-line"></div>
             </div>
+            <div class="skeleton-line skeleton-toggle"></div>
             <div class="skeleton-divider"></div>
             <div class="skeleton-person">
               <div class="skeleton-line skeleton-avatar"></div>
@@ -479,7 +487,13 @@
               <div class="skeleton-line"></div>
               <div class="skeleton-line"></div>
               <div class="skeleton-line"></div>
+              <div class="skeleton-line"></div>
+              <div class="skeleton-line"></div>
+              <div class="skeleton-line"></div>
+              <div class="skeleton-line"></div>
+              <div class="skeleton-line"></div>
             </div>
+            <div class="skeleton-line skeleton-toggle"></div>
             <div class="skeleton-divider"></div>
             <div class="skeleton-person">
               <div class="skeleton-line skeleton-avatar"></div>

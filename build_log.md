@@ -4,6 +4,29 @@ Append-only. One entry per session that makes meaningful changes.
 
 ---
 
+## 2026-06-09 (night) — Live-feed resilience: SWR cache + timeout/retry + CLS fixes
+
+### Done
+- Before-state captured with a new CDP harness (`tools/test-feeds.mjs`): no cache of any kind; offline/500/malformed all destroyed the pinned `data-static` featured card; a slow proxy hung skeletons forever; in-view swap CLS 0.024 (Writing) / 0.196 (Testimonials)
+- Shipped (AAP'd) a shared resilient feed loader in `main.js`: stale-while-revalidate via localStorage (`feed:*`, schema-stamped normalized card shapes), AbortController timeout 6s/attempt, 1 retry + 1s backoff (never on 4xx — rss2json rate-limits), reconcile re-render only when normalized content differs
+- Both feeds refactored onto it: warm visits paint cached cards before any network; failures keep last-good content; the link-out fallback is now strictly a cold-cache + failure state — with the static card preserved and leading (fixed)
+- Layout shift killed: writing skeletons 3→2 (matches static + 2 rendered), skeleton heights calibrated to measured card heights (two-line title, 9-line testimonial body + toggle line). In-view swap CLS: Writing 0.024→0.0007, Testimonials 0.196→0.000
+- New token `--duration-feed-crossfade` + `.feed-swap` CSS for the reconcile swap (CSS-only, works without GSAP); `aria-busy` on both grids until first render
+- Fixed two pre-existing a11y bugs found en route: injected cards animated under `prefers-reduced-motion`, and the no-GSAP path stranded cards at `translateY(32px)`
+- All four failure modes (offline / timeout / 500 / malformed) verified recovering, cold and warm; excerpt stripping moved from detached-div `innerHTML` to inert `DOMParser`
+- DECISION doc: `docs/decisions/2026-06-09-feed-resilience-swr.md`
+
+### Decisions
+- **localStorage over Service Worker / Cache API** — synchronous read = same-frame cached paint; payload is the normalized render shape so one `FEED_CACHE_SCHEMA` constant honestly gates compatibility
+- **No cache TTL** — stale-on-failure is the point; staleness is bounded by the next healthy visit; a TTL reintroduces the blank-section failure
+- **Timeout 6s** — rss2json measured at 2.7s on a *healthy* request; 3–4s would abort live responses
+
+### Next
+- If the live testimonial count changes, update the skeleton count in `index.html` (noted in markup comment)
+- `character.png` optimization still outstanding (4.8 MB)
+
+---
+
 ## 2026-06-09 (later) — Real root cause + adaptive render quality
 
 ### Done

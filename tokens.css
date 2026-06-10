@@ -119,6 +119,9 @@
   --duration-normal:  250ms;
   --duration-slow:    400ms;
   --duration-slower:  600ms;
+  /* Live-feed reconcile crossfade — cached cards swapping to revalidated
+     content (main.js loadFeedSWR). Entrance reveals are GSAP's job. */
+  --duration-feed-crossfade: 200ms;
 
   --easing-default: cubic-bezier(0.4, 0, 0.2, 1);
   --easing-in:      cubic-bezier(0.4, 0, 1, 1);
