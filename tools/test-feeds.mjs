@@ -87,8 +87,6 @@ const SNAPSHOT_SNIPPET = `(() => {
       testimonialSkeletons: heights('.skeleton-testimonial'),
     },
     writingCards:        $$('.writing-card'),
-    staticCardPresent:   !!document.querySelector('.writing-card[data-static]'),
-    staticCardFirst:     !!document.querySelector('.writing-grid > :first-child[data-static]'),
     writingSkeletons:    $$('.skeleton-writing'),
     writingError:        $$('.writing-error'),
     testimonialCards:    $$('.testimonial-card'),

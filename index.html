@@ -372,26 +372,22 @@
     <!-- ─── Writing ───────────────────────────────────────────── -->
     <section id="writing" class="section section-alt" aria-labelledby="writing-heading">
       <div class="container">
-        <p class="section-label" id="writing-heading">Writing</p>
+        <p class="section-label" id="writing-heading">Latest from The Civic Node</p>
         <div class="writing-grid" aria-live="polite" aria-busy="true" aria-label="Writing posts">
-          <!-- Featured article — static, preserved by fetchWritingPosts() in main.js -->
-          <a
-            href="/pkm-llm-wiki.html"
-            class="writing-card"
-            data-static="true"
-            aria-label="Read: Obsidian Was Never the Problem"
-          >
-            <time class="writing-date" datetime="2026-04-07">Apr 7, 2026</time>
-            <h3 class="writing-title">Obsidian Was Never the Problem</h3>
-            <p class="writing-excerpt">
-              Every PKM tool fails for the same reason: you become the maintenance worker.
-              Karpathy's LLM wiki reveals the real fix.
-            </p>
-            <span class="writing-cta">Read essay →</span>
-          </a>
           <!-- Skeleton cards — replaced by fetchWritingPosts() in main.js.
-               Count matches the rendered state (static card + 2 RSS cards)
+               Count matches the rendered state (newest 3 RSS cards)
                so the swap can't collapse a grid row. -->
+          <div class="skeleton-writing" aria-hidden="true">
+            <div class="skeleton-line skeleton-date"></div>
+            <div class="skeleton-line skeleton-title"></div>
+            <div class="skeleton-body">
+              <div class="skeleton-line"></div>
+              <div class="skeleton-line"></div>
+              <div class="skeleton-line"></div>
+              <div class="skeleton-line"></div>
+            </div>
+            <div class="skeleton-line skeleton-cta"></div>
+          </div>
           <div class="skeleton-writing" aria-hidden="true">
             <div class="skeleton-line skeleton-date"></div>
             <div class="skeleton-line skeleton-title"></div>
@@ -420,7 +416,7 @@
             Browse all writing →
           </a>
           <a href="https://drinkyouroj.substack.com" target="_blank" rel="noopener noreferrer" class="writing-all-link">
-            View on Substack →
+            The Civic Node on Substack →
           </a>
         </div>
       </div>
