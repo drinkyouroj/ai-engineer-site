@@ -42,12 +42,24 @@ function fail(msg) {
 
 // ── Fetch ──────────────────────────────────────────────────────────
 
+// Browser-shaped headers: Substack sits behind Cloudflare, which 403s
+// Node's default `node` user agent from datacenter IPs (GitHub runners) —
+// the bare fetch works locally but not in CI.
+const FETCH_HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
+  'Accept': 'application/rss+xml, application/xml;q=0.9, text/xml;q=0.8, */*;q=0.7',
+  'Accept-Language': 'en-US,en;q=0.9',
+};
+
 async function fetchFeed(url) {
   let lastErr;
   for (let attempt = 0; attempt <= FETCH_RETRIES; attempt++) {
     if (attempt > 0) await new Promise(r => setTimeout(r, 1000 * attempt));
     try {
-      const res = await fetch(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
+      const res = await fetch(url, {
+        headers: FETCH_HEADERS,
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      });
       if (!res.ok) { lastErr = new Error(`HTTP ${res.status}`); continue; }
       return await res.text();
     } catch (err) {
